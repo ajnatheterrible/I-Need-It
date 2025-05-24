@@ -19,14 +19,13 @@ import {
 } from "@chakra-ui/react";
 import { FaCamera } from "react-icons/fa";
 import { CheckIcon } from "@chakra-ui/icons";
-import Container from "../components/Container";
+import Container from "../components/shared/Container";
 
 export default function Sell() {
   return (
     <>
       <Container>
         <Box maxW="960px" mx="auto" py={10}>
-          {/* Header */}
           <HStack justify="space-between" mb={16}>
             <Heading fontSize="32px" fontWeight="bold">
               Add a new listing
@@ -36,7 +35,6 @@ export default function Sell() {
             </Text>
           </HStack>
 
-          {/* Details */}
           <Box mb={16}>
             <Heading fontSize="20px" fontWeight="bold" mb={4}>
               Details
@@ -65,7 +63,6 @@ export default function Sell() {
             </SimpleGrid>
           </Box>
 
-          {/* Item Info */}
           <Box mb={16}>
             <FormControl id="item-name">
               <FormLabel fontSize="20px" fontWeight="bold" mb={4}>
@@ -239,7 +236,6 @@ export default function Sell() {
               Photos
             </Heading>
             <Grid templateColumns="repeat(8, 1fr)" gap={4}>
-              {/* Large left photo (spans 4 columns, 2 rows) */}
               <GridItem colSpan={4} rowSpan={2}>
                 <label
                   htmlFor="photo-1"
@@ -270,7 +266,6 @@ export default function Sell() {
                 </label>
               </GridItem>
 
-              {/* Top right photos */}
               {[2, 3, 4, 5].map((id) => (
                 <GridItem colSpan={2} key={id}>
                   <label htmlFor={`photo-${id}`} style={{ width: "100%" }}>

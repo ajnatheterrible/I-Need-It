@@ -4,19 +4,16 @@ import {
   GridItem,
   Text,
   VStack,
-  HStack,
-  Avatar,
   Badge,
   Button,
   Image,
-  Link,
   Divider,
 } from "@chakra-ui/react";
 import { Link as RouterLink } from "react-router-dom";
-import Container from "../components/Container";
-import Footer from "../components/Footer";
-import SellerSidebar from "../components/SellerSidebar";
-import SellerProfileHeader from "../components/SellerProfileHeader";
+import Container from "../components/shared/Container";
+import Footer from "../components/layout/Footer";
+import SellerSidebar from "../components/sidebars/SellerSidebar";
+import SellerProfileHeader from "../components/profile/SellerProfileHeader";
 
 export default function Sold() {
   const sales = [...Array(5)].map((_, i) => ({
@@ -45,12 +42,10 @@ export default function Sold() {
             pb={10}
             w="full"
           >
-            {/* Sidebar */}
             <GridItem colSpan={2}>
               <SellerSidebar active="SOLD" />
             </GridItem>
 
-            {/* Main Content */}
             <GridItem colSpan={10}>
               <VStack align="start" spacing={6} w="full">
                 <Text fontSize="xl" fontWeight="bold">
@@ -64,7 +59,6 @@ export default function Sold() {
                       gap={4}
                       alignItems="start"
                     >
-                      {/* Image + Status */}
                       <Box position="relative">
                         <Image
                           src={item.imageUrl}
@@ -85,7 +79,6 @@ export default function Sold() {
                         </Badge>
                       </Box>
 
-                      {/* Title Info */}
                       <VStack align="start" spacing={1} fontSize="xs">
                         <Text fontWeight="semibold" color="green.600">
                           {item.status}
@@ -100,7 +93,6 @@ export default function Sold() {
                         <Text color="gray.500">{item.size}</Text>
                       </VStack>
 
-                      {/* Sold Date */}
                       <VStack align="start" spacing={1} fontSize="xs">
                         <Text fontWeight="bold" color="gray.600">
                           Sold
@@ -108,7 +100,6 @@ export default function Sold() {
                         <Text color="gray.500">{item.date}</Text>
                       </VStack>
 
-                      {/* Shipping Details */}
                       <VStack align="start" spacing={1} fontSize="xs">
                         <Text fontWeight="bold" color="gray.600">
                           Shipping Details
@@ -120,7 +111,6 @@ export default function Sold() {
                         <Text whiteSpace="pre-wrap">{item.address}</Text>
                       </VStack>
 
-                      {/* Actions */}
                       <VStack
                         spacing={2}
                         align="stretch"

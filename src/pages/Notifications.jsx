@@ -1,4 +1,3 @@
-// src/pages/Notifications.jsx
 import {
   Box,
   Grid,
@@ -11,9 +10,9 @@ import {
   Checkbox,
   Link,
 } from "@chakra-ui/react";
-import Container from "../components/Container";
-import Footer from "../components/Footer";
-import AccountSidebar from "../components/AccountSidebar";
+import Container from "../components/shared/Container";
+import Footer from "../components/layout/Footer";
+import AccountSidebar from "../components/sidebars/AccountSidebar";
 
 const notifications = [
   {
@@ -97,12 +96,10 @@ export default function Notifications() {
     <>
       <Container>
         <Grid templateColumns="repeat(12, 1fr)" gap={6} py={10}>
-          {/* Sidebar */}
           <GridItem colSpan={2}>
             <AccountSidebar />
           </GridItem>
 
-          {/* Main Content */}
           <GridItem colSpan={10}>
             <VStack align="start" spacing={10}>
               <Text fontSize="2xl" fontWeight="bold">

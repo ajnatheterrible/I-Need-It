@@ -1,5 +1,4 @@
 import {
-  Box,
   Grid,
   GridItem,
   Text,
@@ -14,10 +13,10 @@ import {
   Tab,
   Image,
 } from "@chakra-ui/react";
-import Container from "../components/Container";
-import Footer from "../components/Footer";
-import SellerSidebar from "../components/SellerSidebar";
-import SellerProfileHeader from "../components/SellerProfileHeader";
+import Container from "../components/shared/Container";
+import Footer from "../components/layout/Footer";
+import SellerSidebar from "../components/sidebars/SellerSidebar";
+import SellerProfileHeader from "../components/profile/SellerProfileHeader";
 
 export default function PaymentsSeller() {
   return (
@@ -33,19 +32,16 @@ export default function PaymentsSeller() {
             pb={10}
             w="full"
           >
-            {/* Sidebar */}
             <GridItem colSpan={2}>
               <SellerSidebar active="PAYMENTS" />
             </GridItem>
 
-            {/* Main Content */}
             <GridItem colSpan={10}>
               <VStack align="start" spacing={6} w="full">
                 <Text fontSize="2xl" fontWeight="bold">
                   Payments
                 </Text>
 
-                {/* Horizontal Line with PAYMENT METHODS */}
                 <Tabs variant="unstyled" w="full">
                   <TabList borderBottom="1px solid" borderColor="gray.300">
                     <Tab
@@ -61,7 +57,6 @@ export default function PaymentsSeller() {
                   </TabList>
                 </Tabs>
 
-                {/* Stripe Alert */}
                 <Alert
                   status="warning"
                   variant="subtle"
@@ -89,9 +84,7 @@ export default function PaymentsSeller() {
                   </AlertDescription>
                 </Alert>
 
-                {/* Payment Cards */}
                 <HStack spacing={8} w="100%" justify="space-around" pt={4}>
-                  {/* Stripe */}
                   <VStack align="center" spacing={3} w="300px">
                     <Image
                       src="/assets/logos/stripe.png"
@@ -122,7 +115,6 @@ export default function PaymentsSeller() {
                     </Button>
                   </VStack>
 
-                  {/* PayPal */}
                   <VStack align="center" spacing={3} w="300px">
                     <Image
                       src="/assets/logos/paypal.png"

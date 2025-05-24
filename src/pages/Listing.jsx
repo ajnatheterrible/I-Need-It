@@ -20,10 +20,10 @@ import { useState } from "react";
 import { FaRegHeart, FaRegClock } from "react-icons/fa";
 import { ChevronDownIcon } from "@chakra-ui/icons";
 import { Link as RouterLink } from "react-router-dom";
-import Container from "../components/Container";
-import Footer from "../components/Footer";
-import OfferModal from "../components/OfferModal";
-import MessageModal from "../components/MessageModal";
+import Container from "../components/shared/Container";
+import Footer from "../components/layout/Footer";
+import OfferModal from "../components/modals/OfferModal";
+import MessageModal from "../components/modals/MessageModal";
 
 const listings = Array(4).fill({
   id: 1,

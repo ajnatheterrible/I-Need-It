@@ -10,10 +10,10 @@ import {
   SimpleGrid,
   Flex,
 } from "@chakra-ui/react";
-import Container from "../components/Container";
-import Footer from "../components/Footer";
-import SellerSidebar from "../components/SellerSidebar";
-import SellerProfileHeader from "../components/SellerProfileHeader";
+import Container from "../components/shared/Container";
+import Footer from "../components/layout/Footer";
+import SellerSidebar from "../components/sidebars/SellerSidebar";
+import SellerProfileHeader from "../components/profile/SellerProfileHeader";
 
 export default function Drafts() {
   const drafts = [
@@ -42,12 +42,10 @@ export default function Drafts() {
             pb={10}
             w="full"
           >
-            {/* Sidebar */}
             <GridItem colSpan={2}>
               <SellerSidebar active="DRAFTS" />
             </GridItem>
 
-            {/* Main Content */}
             <GridItem colSpan={10}>
               <VStack align="start" spacing={6} w="full">
                 <Text fontSize="xl" fontWeight="bold">
@@ -57,9 +55,7 @@ export default function Drafts() {
                 <SimpleGrid columns={[1, null, 2]} spacing={8} w="full">
                   {drafts.map((item) => (
                     <Box key={item.id} w="full" maxW="400px">
-                      {/* Top Half: ICON + CONTENT */}
                       <Flex align="start" gap={4}>
-                        {/* Left: Image/Placeholder Icon */}
                         <Box
                           w="120px"
                           h="120px"
@@ -69,14 +65,11 @@ export default function Drafts() {
                           mt="2px"
                         />
 
-                        {/* Right: Text Content */}
                         <VStack align="start" spacing={3} w="full">
-                          {/* Timestamp */}
                           <Text fontSize="xs" color="gray.500" mt={0.5}>
                             {item.createdAt}
                           </Text>
 
-                          {/* Title */}
                           <Text
                             fontSize="sm"
                             fontWeight="medium"
@@ -85,7 +78,6 @@ export default function Drafts() {
                             {item.title}
                           </Text>
 
-                          {/* Progress Bar */}
                           <HStack spacing={2} w="full">
                             <Progress
                               value={100}
@@ -104,7 +96,6 @@ export default function Drafts() {
                         </VStack>
                       </Flex>
 
-                      {/* Buttons go UNDERNEATH the whole flex row */}
                       <VStack spacing={2} pt={3} w="full">
                         <Button
                           w="full"

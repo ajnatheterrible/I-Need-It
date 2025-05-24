@@ -10,10 +10,9 @@ import {
   SimpleGrid,
   Center,
 } from "@chakra-ui/react";
-import Container from "../components/Container";
-import Footer from "../components/Footer";
+import Container from "../components/shared/Container";
+import Footer from "../components/layout/Footer";
 
-// Logo designers at the top
 const logoDesigners = [
   "Rick Owens",
   "Raf Simons",
@@ -23,10 +22,8 @@ const logoDesigners = [
   "Maison Margiela",
 ];
 
-// Alphabet bar
 const alphabet = ["#", ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")];
 
-// Dummy designer data by letter
 const designersByLetter = alphabet.reduce((acc, letter) => {
   acc[letter] = Array.from(
     { length: 30 },
@@ -40,14 +37,12 @@ export default function Designers() {
     <>
       <Container>
         <VStack align="stretch" spacing={8} py={10}>
-          {/* Title */}
           <Center>
             <Text fontSize="3xl" fontWeight="bold">
               Designers
             </Text>
           </Center>
 
-          {/* Logo Row */}
           <SimpleGrid columns={[2, null, 3, 6]} spacing={6} width="100%">
             {logoDesigners.map((designer, i) => (
               <VStack
@@ -66,7 +61,6 @@ export default function Designers() {
             ))}
           </SimpleGrid>
 
-          {/* A–Z Alphabet Row */}
           <Grid templateColumns="repeat(27, 1fr)" gap={0} pt={4} width="100%">
             {alphabet.map((letter) => (
               <Link
@@ -83,10 +77,8 @@ export default function Designers() {
             ))}
           </Grid>
 
-          {/* Divider */}
           <Divider borderColor="gray.300" />
 
-          {/* Filter Bar */}
           <HStack justify="space-between" width="100%" wrap="wrap" pt={2}>
             <HStack spacing={6}>
               <Link fontWeight="semibold" color="black">
@@ -113,7 +105,6 @@ export default function Designers() {
             </Box>
           </HStack>
 
-          {/* Designer Index Sections */}
           {alphabet.map((letter) => (
             <HStack
               key={letter}
@@ -122,14 +113,12 @@ export default function Designers() {
               pt={10}
               id={letter}
             >
-              {/* Left: Large Letter */}
               <Box minW="40px">
                 <Text fontSize="6xl" fontWeight="normal">
                   {letter}
                 </Text>
               </Box>
 
-              {/* Right: 3-column Designer Grid */}
               <SimpleGrid columns={[1, 2, 3]} spacingY={2} flex="1">
                 {designersByLetter[letter].map((name, i) => (
                   <Link

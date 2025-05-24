@@ -12,9 +12,9 @@ import {
   Link,
 } from "@chakra-ui/react";
 import { Link as RouterLink } from "react-router-dom";
-import Container from "../components/Container";
-import Footer from "../components/Footer";
-import AccountSidebar from "../components/AccountSidebar"; // 🆕 import sidebar component
+import Container from "../components/shared/Container";
+import Footer from "../components/layout/Footer";
+import AccountSidebar from "../components/sidebars/AccountSidebar"; // 🆕 import sidebar component
 
 export default function Purchases() {
   const purchases = [...Array(5)].map((_, i) => ({
@@ -33,12 +33,10 @@ export default function Purchases() {
     <>
       <Container>
         <Grid templateColumns="repeat(12, 1fr)" gap={6} py={10}>
-          {/* Sidebar */}
           <GridItem colSpan={2}>
             <AccountSidebar />
           </GridItem>
 
-          {/* Main Content */}
           <GridItem colSpan={10}>
             <VStack align="start" spacing={6}>
               <Text fontSize="4xl" fontWeight="bold">

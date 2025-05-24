@@ -9,10 +9,10 @@ import {
   Button,
   Image,
 } from "@chakra-ui/react";
-import Container from "../components/Container";
-import Footer from "../components/Footer";
-import SellerSidebar from "../components/SellerSidebar";
-import SellerProfileHeader from "../components/SellerProfileHeader";
+import Container from "../components/shared/Container";
+import Footer from "../components/layout/Footer";
+import SellerSidebar from "../components/sidebars/SellerSidebar";
+import SellerProfileHeader from "../components/profile/SellerProfileHeader";
 
 export default function ForSale() {
   return (
@@ -21,21 +21,17 @@ export default function ForSale() {
         <VStack align="start" spacing={4} py={10}>
           <SellerProfileHeader />
 
-          {/* Body section */}
           <Grid templateColumns="repeat(12, 1fr)" gap={6} pt={6} w="full">
-            {/* Sidebar */}
             <GridItem colSpan={2}>
               <SellerSidebar />
             </GridItem>
 
-            {/* Listings */}
             <GridItem colSpan={10}>
               <VStack align="start" spacing={4}>
                 <Text fontSize="xl" fontWeight="bold">
                   For Sale
                 </Text>
 
-                {/* Grid */}
                 <SimpleGrid columns={3} spacing={6} w="full">
                   {[...Array(9)].map((_, i) => (
                     <Box

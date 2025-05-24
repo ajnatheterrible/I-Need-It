@@ -11,9 +11,9 @@ import {
   Button,
 } from "@chakra-ui/react";
 import { useState } from "react";
-import Container from "../components/Container";
-import Footer from "../components/Footer";
-import AccountSidebar from "../components/AccountSidebar";
+import Container from "../components/shared/Container";
+import Footer from "../components/layout/Footer";
+import AccountSidebar from "../components/sidebars/AccountSidebar";
 
 export default function Messages() {
   const [view, setView] = useState("buy");
@@ -25,7 +25,7 @@ export default function Messages() {
 
   const messages = [...Array(5)].map((_, i) => ({
     id: i,
-    seller: "RICK OWENS",
+    designer: "RICK OWENS",
     item: "Rick Owens leather tyrone pants",
     snippet: "Please read! I’ve told you that I’d...",
     date: "1 day ago",
@@ -48,14 +48,11 @@ export default function Messages() {
     <>
       <Container>
         <Grid templateColumns="repeat(12, 1fr)" gap={6} py={10}>
-          {/* Sidebar */}
           <GridItem colSpan={2} as="nav">
             <AccountSidebar active="MESSAGES" />
           </GridItem>
 
-          {/* Main Content */}
           <GridItem colSpan={8}>
-            {/* Tabs */}
             <Grid templateColumns="repeat(10, 1fr)" mb={6} gap={2}>
               <GridItem colSpan={5}>
                 <Box
@@ -93,7 +90,6 @@ export default function Messages() {
               </GridItem>
             </Grid>
 
-            {/* Messages List */}
             <VStack align="start" spacing={6}>
               {messages.map((msg) => (
                 <Box
@@ -109,7 +105,6 @@ export default function Messages() {
                   cursor="pointer"
                   transition="background 0.2s"
                 >
-                  {/* Collapsed Row */}
                   <HStack
                     spacing={6}
                     w="full"
@@ -123,13 +118,13 @@ export default function Messages() {
                     <HStack spacing={4} minW="240px">
                       <Avatar
                         size="md"
-                        name={msg.seller}
+                        name={msg.designer}
                         bg="gray.200"
                         color="gray.700"
                       />
                       <VStack spacing={1} align="start">
                         <Text fontWeight="bold" fontSize="sm">
-                          {msg.seller}
+                          {msg.designer}
                         </Text>
                         <Text fontSize="xs" color="gray.600">
                           {msg.item}
@@ -159,7 +154,6 @@ export default function Messages() {
                     </Box>
                   </HStack>
 
-                  {/* Expanded Thread */}
                   {expandedId === msg.id && (
                     <Box px={6} py={4}>
                       {dummyThread.map((m, i) => (
@@ -189,7 +183,6 @@ export default function Messages() {
             </VStack>
           </GridItem>
 
-          {/* Spacer */}
           <GridItem colSpan={2} />
         </Grid>
       </Container>
