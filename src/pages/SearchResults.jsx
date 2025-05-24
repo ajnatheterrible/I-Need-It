@@ -14,9 +14,9 @@ import {
 } from "@chakra-ui/react";
 import { FaRegHeart, FaRegClock } from "react-icons/fa";
 import { Link as RouterLink } from "react-router-dom";
-import Container from "../components/Container";
-import Footer from "../components/Footer";
-import FilterSidebar from "../components/FilterSidebar";
+import Container from "../components/shared/Container";
+import Footer from "../components/layout/Footer";
+import FilterSidebar from "../components/sidebars/FilterSidebar";
 
 const listings = Array(19).fill({
   id: 1,

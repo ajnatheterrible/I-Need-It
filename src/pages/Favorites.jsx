@@ -11,8 +11,8 @@ import {
   IconButton,
 } from "@chakra-ui/react";
 import { FaRegHeart, FaRegClock } from "react-icons/fa";
-import Container from "../components/Container";
-import Footer from "../components/Footer";
+import Container from "../components/shared/Container";
+import Footer from "../components/layout/Footer";
 
 const listings = Array(19).fill({
   id: 1,

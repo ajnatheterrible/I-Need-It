@@ -1,4 +1,3 @@
-// src/pages/Payments.jsx
 import {
   Box,
   Grid,
@@ -7,13 +6,12 @@ import {
   VStack,
   HStack,
   Button,
-  Divider,
   Icon,
 } from "@chakra-ui/react";
 import { FaCcVisa, FaCcMastercard } from "react-icons/fa";
-import Container from "../components/Container";
-import Footer from "../components/Footer";
-import AccountSidebar from "../components/AccountSidebar";
+import Container from "../components/shared/Container";
+import Footer from "../components/layout/Footer";
+import AccountSidebar from "../components/sidebars/AccountSidebar";
 
 export default function Payments() {
   const cards = [
@@ -33,19 +31,15 @@ export default function Payments() {
     <>
       <Container>
         <Grid templateColumns="repeat(12, 1fr)" gap={6} py={10}>
-          {/* Sidebar */}
           <GridItem colSpan={2}>
             <AccountSidebar />
           </GridItem>
 
-          {/* Main Content */}
           <GridItem colSpan={10}>
             <VStack align="start" spacing={6} w="full">
               <Text fontSize="2xl" fontWeight="bold">
                 Payments
               </Text>
-
-              {/* Tabs */}
 
               <Box borderBottom="2px solid black" pb={1} fontWeight="bold">
                 <Text fontSize="sm" fontWeight="semibold">
@@ -53,14 +47,12 @@ export default function Payments() {
                 </Text>
               </Box>
 
-              {/* Add New Card Button */}
               <Box alignSelf="flex-end">
                 <Button size="sm" variant="outline" fontSize="xs">
                   + ADD NEW CARD
                 </Button>
               </Box>
 
-              {/* Cards List */}
               <HStack spacing={12} align="start" pt={4}>
                 {cards.map((card, idx) => (
                   <Box

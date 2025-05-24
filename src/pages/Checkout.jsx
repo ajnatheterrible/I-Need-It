@@ -17,7 +17,7 @@ import { ChevronRightIcon, InfoIcon } from "@chakra-ui/icons";
 import { Link as RouterLink } from "react-router-dom";
 import { FaBoxOpen, FaTruck, FaBolt } from "react-icons/fa";
 import { FaRegCreditCard } from "react-icons/fa";
-import Container from "../components/Container";
+import Container from "../components/shared/Container";
 
 export default function CheckoutPage() {
   return (
@@ -39,15 +39,12 @@ export default function CheckoutPage() {
         </HStack>
       </Container>
 
-      {/* Full-width divider between containers */}
-      <Divider mb={16} />
+      <Divider mb={10} />
 
       <Container>
-        <Grid templateColumns="repeat(12, 1fr)" gap={8} mb={4}>
-          {/* Left Section: cols 1-5 */}
+        <Grid templateColumns="repeat(12, 1fr)" gap={8} mb={10}>
           <GridItem colSpan={5}>
             <VStack spacing={10} align="start">
-              {/* Shipping Address */}
               <Box w="100%">
                 <Heading size="sm" mb={3}>
                   Shipping Address
@@ -71,7 +68,6 @@ export default function CheckoutPage() {
                 </Box>
               </Box>
 
-              {/* Delivery Options */}
               <Box w="100%">
                 <Heading size="sm" mb={2}>
                   Delivery
@@ -127,7 +123,6 @@ export default function CheckoutPage() {
                 </RadioGroup>
               </Box>
 
-              {/* Payment Method */}
               <Box w="100%">
                 <Heading size="sm" mb={3}>
                   Select Your Payment Method
@@ -182,10 +177,8 @@ export default function CheckoutPage() {
             </VStack>
           </GridItem>
 
-          {/* Spacer: cols 6-7 */}
           <GridItem colSpan={2} />
 
-          {/* Right Section: cols 8-12 */}
           <GridItem colSpan={5}>
             <VStack spacing={6} align="start" w="100%">
               <Box

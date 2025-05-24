@@ -6,14 +6,12 @@ import {
   VStack,
   HStack,
   Switch,
-  Divider,
   Icon,
 } from "@chakra-ui/react";
 import { FaShippingFast } from "react-icons/fa";
-import Container from "../components/Container";
-import Footer from "../components/Footer";
-import SellerSidebar from "../components/SellerSidebar";
-import SellerProfileHeader from "../components/SellerProfileHeader";
+import Footer from "../components/layout/Footer";
+import SellerSidebar from "../components/sidebars/SellerSidebar";
+import SellerProfileHeader from "../components/profile/SellerProfileHeader";
 
 export default function SellerSettings() {
   return (
@@ -29,19 +27,16 @@ export default function SellerSettings() {
             pb={10}
             w="full"
           >
-            {/* Sidebar */}
             <GridItem colSpan={2}>
               <SellerSidebar active="SETTINGS" />
             </GridItem>
 
-            {/* Main Content */}
             <GridItem colSpan={10}>
               <VStack align="start" spacing={6} w="full">
                 <Text fontSize="2xl" fontWeight="bold">
                   Settings
                 </Text>
 
-                {/* Tabs Header Bar */}
                 <Box w="full">
                   <HStack borderBottom="1px solid" borderColor="gray.300">
                     <Text
@@ -62,7 +57,6 @@ export default function SellerSettings() {
                   </Text>
                 </Text>
 
-                {/* Expedited Delivery Banner */}
                 <Box
                   w="full"
                   bgGradient="linear(to-r, green.600, green.400)"
@@ -96,7 +90,6 @@ export default function SellerSettings() {
                   </HStack>
                 </Box>
 
-                {/* Thermal Printing Setting */}
                 <Box w="full" bg="white" borderRadius="md" px={4} py={3}>
                   <HStack justify="space-between" w="full" align="flex-start">
                     <Box>
