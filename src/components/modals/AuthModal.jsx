@@ -11,12 +11,15 @@ import {
   HStack,
   Divider,
   Text,
+  Link,
 } from "@chakra-ui/react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import validator from "validator";
 import useAuthStore from "../../store/authStore";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple } from "react-icons/fa";
+import PasswordInput from "../shared/PasswordInput";
 
 export default function AuthModal({
   isOpen,
@@ -34,6 +37,7 @@ export default function AuthModal({
   const [errorMessage, setErrorMessage] = useState("");
 
   const login = useAuthStore((state) => state.login);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -41,15 +45,9 @@ export default function AuthModal({
 
     if (name === "username") {
       const cleaned = value.replace(/[^a-zA-Z0-9]/g, "");
-      setFormData((prev) => ({
-        ...prev,
-        [name]: cleaned,
-      }));
+      setFormData((prev) => ({ ...prev, [name]: cleaned }));
     } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
@@ -104,9 +102,11 @@ export default function AuthModal({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} isCentered size="md">
-      <ModalOverlay />
+      <ModalOverlay bg="blackAlpha.800" backdropFilter="blur(4px)" />
       <ModalContent>
-        <ModalHeader>{view === "login" ? "Log In" : "Sign Up"}</ModalHeader>
+        <ModalHeader textAlign="center">
+          {view === "login" ? "Log in" : "Create an account"}
+        </ModalHeader>
         <ModalCloseButton />
 
         <ModalBody pb={6}>
@@ -151,15 +151,33 @@ export default function AuthModal({
               </Text>
             )}
 
-            <Input
-              placeholder="Password"
+            <PasswordInput
               name="password"
-              type="password"
+              placeholder="Password"
               value={formData.password}
               onChange={handleChange}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && isFormValid && !loading) {
+                  handleSubmit();
+                }
+              }}
               onFocus={() => setFocusedField("password")}
               onBlur={() => setFocusedField(null)}
             />
+
+            {view === "login" && (
+              <Text fontSize="sm" color="blue.500" textAlign="right">
+                <Link
+                  onClick={() => {
+                    onClose();
+                    navigate("/forgot-password");
+                  }}
+                >
+                  Forgot password?
+                </Link>
+              </Text>
+            )}
+
             {focusedField === "password" && (
               <Text
                 fontSize="xs"
@@ -182,7 +200,7 @@ export default function AuthModal({
               isLoading={loading}
               isDisabled={!isFormValid}
             >
-              {view === "login" ? "Log In" : "Sign Up"}
+              {view === "login" ? "LOG IN" : "SIGN UP"}
             </Button>
 
             <Text fontSize="sm" color="gray.500" textAlign="center">
@@ -227,6 +245,11 @@ export default function AuthModal({
             >
               Continue with Apple
             </Button>
+
+            <Text mt={4} fontSize={10}>
+              By signing up, you agree to the Terms of Service and Privacy
+              Policy, including Cookie Use
+            </Text>
           </VStack>
         </ModalBody>
       </ModalContent>

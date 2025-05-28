@@ -13,7 +13,13 @@ exports.handleGoogleCallback = async (req, res) => {
     maxAge: 24 * 60 * 60 * 1000,
   });
 
-  res.redirect("http://localhost:5173/");
+  const hasUsername = !!req.user.username;
+
+  res.redirect(
+    hasUsername
+      ? "http://localhost:5173/"
+      : "http://localhost:5173/complete-signup"
+  );
 };
 
 exports.getCurrentUser = async (req, res) => {
@@ -36,7 +42,7 @@ exports.getCurrentUser = async (req, res) => {
   }
 };
 
-exports.setUsername = async (req, res) => {
+exports.patchUser = async (req, res) => {
   const { username } = req.body;
 
   const isValid = /^[a-zA-Z0-9]{3,30}$/.test(username);
@@ -67,11 +73,35 @@ exports.setUsername = async (req, res) => {
     }
 
     user.username = username;
+    user.signupIncompleteAt = undefined;
     await user.save();
 
     res.status(200).json({ user });
   } catch (err) {
     console.error("Set username error:", err);
     res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+exports.cancelGoogleSignup = async (req, res) => {
+  try {
+    const token = req.cookies.token;
+
+    if (!token) {
+      return res.redirect("/");
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findById(decoded.id);
+
+    if (user && user.authProvider === "google" && !user.username) {
+      await User.deleteOne({ _id: user._id });
+    }
+
+    return res.status(200).json({ message: "User deleted and logged out." });
+  } catch (err) {
+    console.error("Cancel signup error:", err);
+    return res.status(500).json({ message: "Server error" });
   }
 };
