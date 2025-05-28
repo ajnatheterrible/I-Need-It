@@ -57,6 +57,20 @@ const UserSchema = new mongoose.Schema(
       enum: ["read-only", "full"],
       default: "full",
     },
+    signupIncompleteAt: {
+      type: Date,
+      default: function () {
+        return this.authProvider === "google" && !this.username
+          ? new Date()
+          : undefined;
+      },
+    },
+    resetPasswordToken: {
+      type: String,
+    },
+    resetPasswordExpires: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );

@@ -33,6 +33,13 @@ import UserFavorites from "./pages/UserFavorites";
 import UserReviews from "./pages/UserReviews";
 import ProtectedRoute from "./components/shared/ProtectedRoute";
 import CompleteSignup from "./pages/static/CompleteSignup";
+import ForgotPassword from "./pages/static/ForgotPassword";
+
+import posthog from "posthog-js";
+
+posthog.init(import.meta.env.VITE_POSTHOG_API_KEY, {
+  api_host: "https://app.posthog.com",
+});
 
 export default function App() {
   return (
@@ -71,6 +78,7 @@ export default function App() {
         <Route path="accessibility" element={<Accessibility />} />
         <Route path="contact-us" element={<Contact />} />
         <Route path="designers" element={<Designers />} />
+        <Route path="forgot-password" element={<ForgotPassword />} />
 
         <Route path="*" element={<NotFound />} />
       </Route>

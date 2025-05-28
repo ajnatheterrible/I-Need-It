@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -5,8 +6,8 @@ const passport = require("passport");
 const cookieParser = require("cookie-parser");
 
 require("./config/passport");
-require("dotenv").config();
 
+const runCleanupJob = require("./cron/cleanup");
 const authRoutes = require("./routes/authRoutes");
 
 const app = express();
@@ -27,7 +28,10 @@ app.use("/api/auth", authRoutes);
 
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB connected"))
+  .then(() => {
+    console.log("✅ MongoDB connected");
+    runCleanupJob();
+  })
   .catch((err) => console.error("MongoDB connection error:", err));
 
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));

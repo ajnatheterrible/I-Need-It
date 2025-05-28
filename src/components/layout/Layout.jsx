@@ -1,12 +1,14 @@
+import { Outlet } from "react-router-dom";
+import { useState, useEffect } from "react";
+import useAuthStore from "../../store/authStore";
+import { useNavigate, useLocation } from "react-router-dom";
+
 import { Box } from "@chakra-ui/react";
 import Navbar from "./Navbar";
 import NavbarGuest from "./NavbarGuest";
 import AuthModal from "../modals/AuthModal";
 import ScrollToTop from "../shared/ScrollToTop";
-import { Outlet } from "react-router-dom";
-import { useState, useEffect } from "react";
-import useAuthStore from "../../store/authStore";
-import { useNavigate } from "react-router-dom";
+import OAuthErrorModal from "../modals/OAuthErrorModal";
 
 export default function Layout() {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
@@ -43,6 +45,28 @@ export default function Layout() {
     }
   }, [isLoggedIn, loadUserFromStorage, login]);
 
+  const location = useLocation();
+  const [oauthError, setOAuthError] = useState(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const errorParam = params.get("error");
+
+    if (errorParam) {
+      setOAuthError(errorParam);
+    }
+  }, [location.search]);
+
+  const handleOAuthModalClose = () => {
+    setOAuthError(null);
+
+    const params = new URLSearchParams(location.search);
+    params.delete("error");
+    const newPath =
+      location.pathname + (params.toString() ? `?${params.toString()}` : "");
+    window.history.replaceState({}, "", newPath);
+  };
+
   return (
     <Box minHeight="100vh">
       <ScrollToTop />
@@ -68,6 +92,12 @@ export default function Layout() {
       <Box pt={!isLoggedIn ? "72px" : undefined}>
         <Outlet />
       </Box>
+
+      <OAuthErrorModal
+        isOpen={!!oauthError}
+        onClose={handleOAuthModalClose}
+        errorType={oauthError}
+      />
     </Box>
   );
 }

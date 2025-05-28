@@ -22,7 +22,7 @@ passport.use(
         });
         if (existingByEmail && !existingByEmail.googleId) {
           const err = new Error("Email already registered locally");
-          err.name = "OAuthEmailExists";
+          err.name = "LocalEmailExists";
           return done(err, false);
         }
 
