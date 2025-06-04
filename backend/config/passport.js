@@ -1,8 +1,11 @@
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const jwt = require("jsonwebtoken");
-const User = require("../models/User");
 const dotenv = require("dotenv");
+const User = require("../models/User");
+const asyncHandler = require("../middleware/asyncHandler");
+const createError = require("../utils/createError");
+
 dotenv.config();
 
 passport.use(
@@ -17,17 +20,25 @@ passport.use(
         const existingUser = await User.findOne({ googleId: profile.id });
         if (existingUser) return done(null, existingUser);
 
-        const existingByEmail = await User.findOne({
-          email: profile.emails[0].value,
-        });
+        const email = profile.emails?.[0]?.value;
+        if (!email) {
+          const err = createError(
+            "Google account does not have a valid email",
+            400
+          );
+          err.name = "MissingEmail";
+          return done(err, false);
+        }
+
+        const existingByEmail = await User.findOne({ email });
         if (existingByEmail && !existingByEmail.googleId) {
-          const err = new Error("Email already registered locally");
+          const err = createError("Email already registered locally", 409);
           err.name = "LocalEmailExists";
           return done(err, false);
         }
 
         const newUser = await User.create({
-          email: profile.emails[0].value,
+          email,
           googleId: profile.id,
           authProvider: "google",
         });
@@ -40,23 +51,19 @@ passport.use(
   )
 );
 
-const requireUsername = async (req, res, next) => {
-  try {
-    const token = req.cookies.token;
-    if (!token) return res.redirect("/");
+const requireUsername = asyncHandler(async (req, res, next) => {
+  const token = req.cookies.token;
+  if (!token) return res.redirect("/");
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  const user = await User.findById(decoded.id);
 
-    if (!user || user.username === null) {
-      return res.redirect("/complete-signup");
-    }
-
-    next();
-  } catch (err) {
-    return res.redirect("/");
+  if (!user || user.username === null) {
+    return res.redirect("/complete-signup");
   }
-};
+
+  next();
+});
 
 module.exports = {
   passport,

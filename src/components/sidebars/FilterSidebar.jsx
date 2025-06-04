@@ -8,11 +8,20 @@ import {
   Button,
   Collapse,
   Checkbox,
+  Tooltip,
 } from "@chakra-ui/react";
+import EditSizesModal from "../modals/EditSizesModal";
 import { ChevronUpIcon, ChevronDownIcon } from "@chakra-ui/icons";
 import { useState } from "react";
+import { useSearchParams, useOutletContext } from "react-router-dom";
+import useAuthStore from "../../store/authStore";
 
-export default function FilterSidebar() {
+export default function FilterSidebar({
+  filters,
+  setFilters,
+  isUsingMySizes,
+  setIsUsingMySizes,
+}) {
   const [showDepartment, setShowDepartment] = useState(true);
   const [showCategory, setShowCategory] = useState(true);
   const [showSize, setShowSize] = useState(false);
@@ -20,10 +29,10 @@ export default function FilterSidebar() {
   const [showPrice, setShowPrice] = useState(false);
   const [showCondition, setShowCondition] = useState(false);
   const [showLocation, setShowLocation] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
-  const [menswearSelected, setMenswearSelected] = useState(false);
-  const [womenswearSelected, setWomenswearSelected] = useState(false);
-
+  const sizes = ["XXS", "XS", "S", "M", "L", "XL", "XXL"];
+  const conditions = ["New/Never Worn", "Used", "Gently Used", "Very Worn"];
   const mensCategories = [
     "Tops",
     "Bottoms",
@@ -41,26 +50,42 @@ export default function FilterSidebar() {
     "Accessories",
   ];
 
-  const [openMens, setOpenMens] = useState({});
-  const [openWomens, setOpenWomens] = useState({});
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
+  const { onOpenAuthModal } = useOutletContext();
 
-  const toggleMens = (cat) =>
-    setOpenMens((prev) => ({ ...prev, [cat]: !prev[cat] }));
-  const toggleWomens = (cat) =>
-    setOpenWomens((prev) => ({ ...prev, [cat]: !prev[cat] }));
+  const [searchParams, setSearchParams] = useSearchParams();
+  const query = searchParams.get("query");
 
-  const toggleCategoryCollapse = (cat, toggleFn, openState) => (
-    <HStack
-      justify="space-between"
-      w="100%"
-      key={cat}
-      cursor="pointer"
-      onClick={() => toggleFn(cat)}
-    >
-      <Text>{cat}</Text>
-      {openState[cat] ? <ChevronUpIcon /> : <ChevronDownIcon />}
-    </HStack>
-  );
+  const handleCheckbox = (field, value) => {
+    setFilters((prev) => ({
+      ...prev,
+      [field]: prev[field]?.includes(value)
+        ? prev[field].filter((item) => item !== value)
+        : [...(prev[field] || []), value],
+    }));
+  };
+
+  const withTooltip = (element) => {
+    return query ? (
+      element
+    ) : (
+      <Tooltip
+        label="Enter a search term to use filters"
+        hasArrow
+        bg="gray.100"
+        color="black"
+        fontSize="xs"
+        px={3}
+        py={2}
+        borderRadius="md"
+        boxShadow="md"
+      >
+        <Box display="inline-block" w="100%">
+          {element}
+        </Box>
+      </Tooltip>
+    );
+  };
 
   return (
     <Box
@@ -82,24 +107,42 @@ export default function FilterSidebar() {
       }}
     >
       <VStack align="start" spacing={6}>
-        <Box
-          border="1px solid"
-          borderColor="gray.200"
-          borderRadius="md"
-          p={4}
-          w="100%"
-        >
-          <HStack justify="space-between" w="100%">
-            <Text fontWeight="bold">My Sizes</Text>
-            <Switch />
-          </HStack>
-          <Text fontSize="sm" color="gray.600" mt={2}>
-            Turn on to filter out listings that are not in your size.
-          </Text>
-          <Button size="xs" variant="link" mt={1}>
-            Edit
-          </Button>
-        </Box>
+        {withTooltip(
+          <Box
+            border="1px solid"
+            borderColor="gray.200"
+            borderRadius="md"
+            p={4}
+            w="100%"
+          >
+            <HStack justify="space-between" w="100%">
+              <Text fontWeight="bold">My Sizes</Text>
+              <Switch
+                isChecked={isUsingMySizes}
+                onChange={() =>
+                  isLoggedIn
+                    ? setIsUsingMySizes((prev) => !prev)
+                    : onOpenAuthModal("register")
+                }
+                isDisabled={!query}
+              />
+            </HStack>
+            <Text fontSize="sm" color="gray.600" mt={2}>
+              Turn on to filter out listings that are not in your size.
+            </Text>
+
+            <Button
+              onClick={() =>
+                isLoggedIn ? setIsEditOpen(true) : onOpenAuthModal("register")
+              }
+              variant="link"
+              size="xs"
+              mt={1}
+            >
+              Edit
+            </Button>
+          </Box>
+        )}
 
         <Box w="100%">
           <HStack
@@ -112,18 +155,18 @@ export default function FilterSidebar() {
           </HStack>
           <Collapse in={showDepartment} animateOpacity>
             <VStack align="start" spacing={2} mt={2}>
-              <Checkbox
-                isChecked={menswearSelected}
-                onChange={(e) => setMenswearSelected(e.target.checked)}
-              >
-                Menswear
-              </Checkbox>
-              <Checkbox
-                isChecked={womenswearSelected}
-                onChange={(e) => setWomenswearSelected(e.target.checked)}
-              >
-                Womenswear
-              </Checkbox>
+              {["Menswear", "Womenswear"].map((dept) =>
+                withTooltip(
+                  <Checkbox
+                    key={dept}
+                    isChecked={(filters.department || []).includes(dept)}
+                    onChange={() => handleCheckbox("department", dept)}
+                    isDisabled={!query}
+                  >
+                    {dept}
+                  </Checkbox>
+                )
+              )}
             </VStack>
           </Collapse>
         </Box>
@@ -140,62 +183,83 @@ export default function FilterSidebar() {
             {showCategory ? <ChevronUpIcon /> : <ChevronDownIcon />}
           </HStack>
           <Collapse in={showCategory} animateOpacity>
-            <Box mt={2} w="100%">
-              {(!womenswearSelected ||
-                (!menswearSelected && !womenswearSelected)) && (
-                <>
-                  <Text fontWeight="bold" mb={2}>
-                    Menswear
-                  </Text>
-                  <VStack align="start" spacing={2} pl={2}>
-                    {mensCategories.map((cat) =>
-                      toggleCategoryCollapse(cat, toggleMens, openMens)
-                    )}
-                  </VStack>
-                </>
+            <VStack align="start" spacing={2} mt={2}>
+              {[...new Set([...mensCategories, ...womensCategories])].map(
+                (cat) =>
+                  withTooltip(
+                    <Checkbox
+                      key={cat}
+                      isChecked={(filters.category || []).includes(cat)}
+                      onChange={() => handleCheckbox("category", cat)}
+                      isDisabled={!query}
+                    >
+                      {cat}
+                    </Checkbox>
+                  )
               )}
-              {(!menswearSelected ||
-                (!menswearSelected && !womenswearSelected)) && (
-                <>
-                  <Text fontWeight="bold" mt={4} mb={2}>
-                    Womenswear
-                  </Text>
-                  <VStack align="start" spacing={2} pl={2}>
-                    {womensCategories.map((cat) =>
-                      toggleCategoryCollapse(cat, toggleWomens, openWomens)
-                    )}
-                  </VStack>
-                </>
-              )}
-            </Box>
+            </VStack>
           </Collapse>
         </Box>
 
         <Divider />
 
-        {[
-          ["Size", showSize, setShowSize],
-          ["Designer", showDesigner, setShowDesigner],
-          ["Condition", showCondition, setShowCondition],
-          ["Location", showLocation, setShowLocation],
-        ].map(([label, state, toggle]) => (
-          <Box w="100%" key={label}>
-            <HStack
-              justify="space-between"
-              onClick={() => toggle(!state)}
-              cursor="pointer"
-            >
-              <Text fontWeight="bold">{label}</Text>
-              {state ? <ChevronUpIcon /> : <ChevronDownIcon />}
-            </HStack>
-            <Collapse in={state} animateOpacity>
-              <Text fontSize="sm" mt={2} color="gray.500">
-                Example {label} option
-              </Text>
-            </Collapse>
-            <Divider mt={3} />
-          </Box>
-        ))}
+        <Box w="100%">
+          <HStack
+            justify="space-between"
+            onClick={() => setShowSize(!showSize)}
+            cursor="pointer"
+          >
+            <Text fontWeight="bold">Size</Text>
+            {showSize ? <ChevronUpIcon /> : <ChevronDownIcon />}
+          </HStack>
+          <Collapse in={showSize} animateOpacity>
+            <VStack align="start" spacing={2} mt={2}>
+              {sizes.map((size) =>
+                withTooltip(
+                  <Checkbox
+                    key={size}
+                    isChecked={(filters.size || []).includes(size)}
+                    onChange={() => handleCheckbox("size", size)}
+                    isDisabled={!query}
+                  >
+                    {size}
+                  </Checkbox>
+                )
+              )}
+            </VStack>
+          </Collapse>
+        </Box>
+
+        <Divider />
+
+        <Box w="100%">
+          <HStack
+            justify="space-between"
+            onClick={() => setShowCondition(!showCondition)}
+            cursor="pointer"
+          >
+            <Text fontWeight="bold">Condition</Text>
+            {showCondition ? <ChevronUpIcon /> : <ChevronDownIcon />}
+          </HStack>
+          <Collapse in={showCondition} animateOpacity>
+            <VStack align="start" spacing={2} mt={2}>
+              {conditions.map((label) =>
+                withTooltip(
+                  <Checkbox
+                    key={label}
+                    isChecked={(filters.condition || []).includes(label)}
+                    onChange={() => handleCheckbox("condition", label)}
+                    isDisabled={!query}
+                  >
+                    {label}
+                  </Checkbox>
+                )
+              )}
+            </VStack>
+          </Collapse>
+        </Box>
+
+        <Divider />
 
         <Box w="100%">
           <HStack
@@ -207,61 +271,60 @@ export default function FilterSidebar() {
             {showPrice ? <ChevronUpIcon /> : <ChevronDownIcon />}
           </HStack>
           <Collapse in={showPrice} animateOpacity>
-            <HStack mt={3} spacing={4}>
-              <HStack
-                borderWidth="1px"
-                borderColor="gray.300"
-                borderRadius="md"
-                px={3}
-                py={1}
-                spacing={2}
-              >
-                <Text color="gray.500" fontSize="sm">
-                  $
-                </Text>
-                <input
-                  type="number"
-                  placeholder="Min"
-                  style={{
-                    outline: "none",
-                    border: "none",
-                    width: "60px",
-                    fontSize: "0.875rem",
-                    color: "#4A5568",
-                    background: "transparent",
-                  }}
-                />
+            {withTooltip(
+              <HStack mt={3} spacing={4}>
+                {["Min", "Max"].map((label, idx) => (
+                  <HStack
+                    key={label}
+                    borderWidth="1px"
+                    borderColor="gray.300"
+                    borderRadius="md"
+                    px={3}
+                    py={1}
+                    spacing={2}
+                  >
+                    <Text color="gray.500" fontSize="sm">
+                      $
+                    </Text>
+                    <input
+                      type="number"
+                      placeholder={label}
+                      value={
+                        idx === 0
+                          ? filters.priceMin || ""
+                          : filters.priceMax || ""
+                      }
+                      onChange={(e) =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          [idx === 0 ? "priceMin" : "priceMax"]: e.target.value
+                            ? parseFloat(e.target.value)
+                            : null,
+                        }))
+                      }
+                      disabled={!query}
+                      style={{
+                        outline: "none",
+                        border: "none",
+                        width: "60px",
+                        fontSize: "0.875rem",
+                        color: "#4A5568",
+                        background: "transparent",
+                      }}
+                    />
+                  </HStack>
+                ))}
               </HStack>
-
-              <HStack
-                borderWidth="1px"
-                borderColor="gray.300"
-                borderRadius="md"
-                px={3}
-                py={1}
-                spacing={2}
-              >
-                <Text color="gray.500" fontSize="sm">
-                  $
-                </Text>
-                <input
-                  type="number"
-                  placeholder="Max"
-                  style={{
-                    outline: "none",
-                    border: "none",
-                    width: "60px",
-                    fontSize: "0.875rem",
-                    color: "#4A5568",
-                    background: "transparent",
-                  }}
-                />
-              </HStack>
-            </HStack>
+            )}
+            <Divider mt={3} />
           </Collapse>
-          <Divider mt={3} />
         </Box>
       </VStack>
+
+      <EditSizesModal
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+      />
     </Box>
   );
 }

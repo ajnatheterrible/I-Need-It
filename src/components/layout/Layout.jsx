@@ -90,7 +90,14 @@ export default function Layout() {
       />
 
       <Box pt={!isLoggedIn ? "72px" : undefined}>
-        <Outlet />
+        <Outlet
+          context={{
+            onOpenAuthModal: (view) => {
+              setAuthView(view);
+              setIsAuthOpen(true);
+            },
+          }}
+        />
       </Box>
 
       <OAuthErrorModal

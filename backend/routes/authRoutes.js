@@ -1,4 +1,5 @@
 const express = require("express");
+const router = express.Router();
 const passport = require("passport");
 const rateLimit = require("express-rate-limit");
 
@@ -16,8 +17,6 @@ const {
   patchUser,
   cancelGoogleSignup,
 } = require("../controllers/oauthController");
-
-const router = express.Router();
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,

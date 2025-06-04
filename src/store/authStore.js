@@ -23,7 +23,7 @@ const useAuthStore = create((set) => ({
     });
   },
 
-  logout: async () => {
+  logout: async (req, res) => {
     try {
       await fetch("http://localhost:5000/api/auth/logout", {
         method: "POST",

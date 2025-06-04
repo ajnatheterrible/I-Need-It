@@ -10,12 +10,23 @@ import {
   InputRightElement,
 } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Container from "../shared/Container";
-import { Link as RouterLink } from "react-router-dom";
 
 export default function NavbarGuest({ onOpenAuthModal }) {
   const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+
+    if (!searchTerm.trim()) {
+      navigate("/shop");
+    } else {
+      navigate(`/shop?query=${encodeURIComponent(searchTerm)}`);
+    }
+  };
 
   return (
     <Box
@@ -45,11 +56,19 @@ export default function NavbarGuest({ onOpenAuthModal }) {
             <InputLeftElement pointerEvents="none">
               <SearchIcon color="gray.500" />
             </InputLeftElement>
-            <Input placeholder="Search for anything" />
+            <Input
+              placeholder="Search for anything"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleSearch(e);
+                }
+              }}
+            />
             <InputRightElement width="90px">
               <Button
-                as={RouterLink}
-                to="/search-results"
+                onClick={handleSearch}
                 h="70%"
                 borderLeftRadius="0"
                 borderRightRadius="0"
