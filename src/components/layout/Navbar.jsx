@@ -27,6 +27,7 @@ import designers from "../../data/designers";
 import menswearItems from "../../data/menswearItems";
 import womenswearItems from "../../data/womenswearItems";
 import useAuthStore from "../../store/AuthStore";
+import { useNavigate } from "react-router-dom";
 
 const navLinks = [
   { label: "DESIGNERS", path: "/designers" },
@@ -59,6 +60,19 @@ export default function Navbar() {
 
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+
+    if (!searchTerm.trim()) {
+      navigate("/shop");
+    } else {
+      navigate(`/shop?query=${encodeURIComponent(searchTerm)}`);
+    }
+  };
 
   useEffect(() => {
     setActiveMenu(null);
@@ -143,19 +157,27 @@ export default function Navbar() {
               <InputLeftElement pointerEvents="none">
                 <SearchIcon color="gray.500" />
               </InputLeftElement>
+
               <Input
                 placeholder="Search for anything"
                 borderRadius="md"
                 pr="90px"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleSearch(e);
+                  }
+                }}
                 _focus={{
                   borderColor: "gray.300",
                   boxShadow: "0 0 0 1px #E2E8F0",
                 }}
               />
+
               <InputRightElement width="90px">
                 <Button
-                  as={RouterLink}
-                  to="/search-results"
+                  onClick={handleSearch}
                   h="70%"
                   borderLeftRadius="0"
                   borderRightRadius="0"

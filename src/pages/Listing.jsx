@@ -16,10 +16,10 @@ import {
   Avatar,
   Input,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaRegHeart, FaRegClock } from "react-icons/fa";
 import { ChevronDownIcon } from "@chakra-ui/icons";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useParams } from "react-router-dom";
 import Container from "../components/shared/Container";
 import Footer from "../components/layout/Footer";
 import OfferModal from "../components/modals/OfferModal";
@@ -38,6 +38,15 @@ const listings = Array(4).fill({
 });
 
 export default function ListingPage() {
+  const { id } = useParams();
+  const [listing, setListing] = useState(null);
+
+  useEffect(() => {
+    fetch(`http://localhost:5000/api/listings/${id}`)
+      .then((res) => res.json())
+      .then((data) => setListing(data));
+  }, [id]);
+
   const {
     isOpen: isOfferOpen,
     onOpen: onOfferOpen,
@@ -49,6 +58,25 @@ export default function ListingPage() {
     onOpen: onMessageOpen,
     onClose: onMessageClose,
   } = useDisclosure();
+
+  const getTimestamp = (createdAt) => {
+    console.log(createdAt);
+    const createdAtMS = new Date(createdAt).getTime();
+    const now = Date.now();
+    const ms = now - createdAtMS;
+
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (seconds < 60) return "just now";
+    if (minutes < 60) return `${minutes} minute${minutes !== 1 ? "s" : ""} ago`;
+    if (hours < 24) return `${hours} hour${hours !== 1 ? "s" : ""} ago`;
+    return `${days} day${days !== 1 ? "s" : ""} ago`;
+  };
+
+  if (!listing) return <Text>Loading...</Text>;
 
   return (
     <>
@@ -96,16 +124,16 @@ export default function ListingPage() {
           <GridItem colSpan={[12, null, 4]}>
             <VStack align="start" spacing={5}>
               <Box>
-                <Heading size="md">KMrii</Heading>
-                <Text>KMrii belt bag</Text>
-                <Text fontSize="sm">Size: ONE SIZE</Text>
-                <Text fontSize="sm">Color: Black</Text>
-                <Text fontSize="sm">Condition: Gently Used</Text>
+                <Heading size="md">{listing?.brand}</Heading>
+                <Text>{listing?.title}</Text>
+                <Text fontSize="sm">Size: {listing?.size}</Text>
+                <Text fontSize="sm">Color: {listing?.color}</Text>
+                <Text fontSize="sm">Condition: {listing?.condition}</Text>
               </Box>
 
               <Box>
                 <Text fontSize="2xl" fontWeight="bold">
-                  $620
+                  ${listing?.price?.toLocaleString()}
                 </Text>
                 <Text fontSize="sm">+ $9 Shipping — US to United States</Text>
               </Box>
@@ -155,16 +183,9 @@ export default function ListingPage() {
               </HStack>
 
               <Box>
-                <Heading size="xs" mb={1}>
-                  Seller Description
-                </Heading>
                 <Text fontSize="sm" mb={1}>
-                  Size 24
+                  {listing?.description}
                 </Text>
-                <Text fontSize="sm" mb={1}>
-                  Yeah
-                </Text>
-                <Text fontSize="sm">Yuhhhhh</Text>
               </Box>
 
               <Box>
@@ -172,29 +193,28 @@ export default function ListingPage() {
                   Tags
                 </Heading>
                 <HStack spacing={2} wrap="wrap">
-                  {["#OPIUM", "#RICKOWENS", "#AVANTGARDE", "#DARKWEAR"].map(
-                    (tag) => (
-                      <Badge
-                        key={tag}
-                        variant="outline"
-                        px={2}
-                        py={1}
-                        borderRadius="md"
-                        fontSize="xs"
-                      >
-                        {tag}
-                      </Badge>
-                    )
-                  )}
+                  {listing?.tags?.map((tag) => (
+                    <Badge
+                      key={tag}
+                      variant="outline"
+                      px={2}
+                      py={1}
+                      borderRadius="md"
+                      fontSize="xs"
+                    >
+                      #{tag}
+                    </Badge>
+                  ))}
                 </HStack>
               </Box>
 
               <Box>
                 <Text fontSize="xs" color="gray.500">
-                  Posted to I Need It 7 days ago
+                  Posted to I Need It{" "}
+                  {listing?.createdAt ? getTimestamp(listing.createdAt) : ""}
                 </Text>
                 <Text fontSize="xs" color="gray.400">
-                  Listing ID: 01234567
+                  Listing ID: {listing?._id || "01234567"}
                 </Text>
               </Box>
 
@@ -257,110 +277,10 @@ export default function ListingPage() {
             </VStack>
           </GridItem>
         </Grid>
-
-        <Box mt={12}>
-          <Heading size="md" mb={4}>
-            Recently Viewed
-          </Heading>
-          <Grid templateColumns="repeat(4, 1fr)" gap={6}>
-            {listings.map((item, index) => (
-              <Box
-                key={index}
-                borderWidth="1px"
-                borderRadius="md"
-                overflow="hidden"
-              >
-                <Box
-                  as={RouterLink}
-                  to="/listing"
-                  _hover={{ textDecoration: "none" }}
-                >
-                  <Box position="relative" height="200px">
-                    <Image
-                      src={item.imageUrl}
-                      alt={item.title}
-                      height="100%"
-                      width="100%"
-                      objectFit="cover"
-                    />
-                    {item.freeShipping && (
-                      <Badge
-                        position="absolute"
-                        top="16px"
-                        left="8px"
-                        bg="#DCEF31"
-                        color="black"
-                        fontWeight="bold"
-                        fontSize="0.7em"
-                        px={2}
-                        py={1}
-                        borderRadius="sm"
-                      >
-                        FREE SHIPPING
-                      </Badge>
-                    )}
-                  </Box>
-                  <Box p={3}>
-                    <Text fontSize="xs" color="gray.500">
-                      {item.timestamp}
-                    </Text>
-                    <Box
-                      borderBottom="1px solid"
-                      borderColor="gray.200"
-                      my={2}
-                    />
-                    <HStack justify="space-between" mt={1}>
-                      <Text fontWeight="bold" fontSize="sm" noOfLines={1}>
-                        {item.brand}
-                      </Text>
-                      <Text fontSize="xs" color="gray.600">
-                        {item.size}
-                      </Text>
-                    </HStack>
-                    <Text fontSize="xs" color="gray.600" noOfLines={1}>
-                      {item.title}
-                    </Text>
-                  </Box>
-                </Box>
-                <Box px={3} pb={3}>
-                  <HStack justify="space-between" mt={2}>
-                    <HStack spacing={2}>
-                      {item.oldPrice && (
-                        <Text
-                          fontSize="sm"
-                          color="gray.500"
-                          textDecoration="line-through"
-                        >
-                          {item.oldPrice}
-                        </Text>
-                      )}
-                      <Text fontSize="sm" fontWeight="bold">
-                        {item.price}
-                      </Text>
-                    </HStack>
-                    <HStack>
-                      <IconButton
-                        size="sm"
-                        icon={<FaRegClock />}
-                        aria-label="Remind"
-                      />
-                      <IconButton
-                        size="sm"
-                        icon={<FaRegHeart />}
-                        aria-label="Unfavorite"
-                      />
-                    </HStack>
-                  </HStack>
-                </Box>
-              </Box>
-            ))}
-          </Grid>
-        </Box>
       </Container>
 
       <OfferModal isOpen={isOfferOpen} onClose={onOfferClose} />
       <MessageModal isOpen={isMessageOpen} onClose={onMessageClose} />
-
       <Footer />
     </>
   );

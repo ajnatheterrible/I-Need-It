@@ -1,9 +1,10 @@
+import { useEffect, useMemo, useState } from "react";
+
 import {
   Box,
   Heading,
   Text,
   Select,
-  VStack,
   HStack,
   Image,
   Badge,
@@ -12,43 +13,165 @@ import {
   Grid,
   Flex,
 } from "@chakra-ui/react";
-import { FaRegHeart, FaRegClock } from "react-icons/fa";
-import { Link as RouterLink } from "react-router-dom";
+import { FaRegHeart, FaHeart } from "react-icons/fa";
+import {
+  Link as RouterLink,
+  useSearchParams,
+  useNavigate,
+  useOutletContext,
+} from "react-router-dom";
+
 import Container from "../components/shared/Container";
 import Footer from "../components/layout/Footer";
 import FilterSidebar from "../components/sidebars/FilterSidebar";
 
-const listings = Array(19).fill({
-  id: 1,
-  brand: "THE VIRIDI-ANNE",
-  title: "Leather mask hooded jacket",
-  size: "M",
-  price: "$1200",
-  oldPrice: "$1300",
-  timestamp: "about 5 hours ago",
-  freeShipping: true,
-  imageUrl: "/placeholder.jpg",
-});
+import getTimestamp from "../utils/getTimestamp";
+import useFetchListings from "../hooks/useFetchListings";
+import useSyncSearchParams from "../hooks/useSyncSearchParams";
+import useFetchFavorites from "../hooks/useFetchFavorites";
+import useFetchSizes from "../hooks/useFetchSizes";
+import useAuthStore from "../store/authStore";
 
 export default function SearchResults() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { onOpenAuthModal } = useOutletContext();
+  const query = searchParams.get("query");
+
+  const user = useAuthStore((s) => s.user);
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
+  const setUser = useAuthStore((s) => s.setUser);
+  const sizes = useAuthStore((s) => s.user?.settings?.sizes);
+  const userId = user?._id;
+
+  useFetchFavorites();
+  useFetchSizes();
+
+  const [listings, setListings] = useState([]);
+  const [count, setCount] = useState(0);
+  const [sortOption, setSortOption] = useState("default");
+  const [isUsingMySizes, setIsUsingMySizes] = useState(false);
+  const [filters, setFilters] = useState({
+    department: searchParams.get("department")?.split(",") || [],
+    category: searchParams.get("category")?.split(",") || [],
+    size: searchParams.get("size")?.split(",") || [],
+    condition: searchParams.get("condition")?.split(",") || [],
+    priceMin: searchParams.get("priceMin") || null,
+    priceMax: searchParams.get("priceMax") || null,
+  });
+  const [, forceUpdate] = useState(false);
+
+  const rawFavorites = useMemo(() => {
+    return Array.isArray(user?.favorites) ? user.favorites : [];
+  }, [user?.favorites]);
+
+  const favoriteIds = useMemo(() => {
+    return rawFavorites.map((f) => (f && typeof f === "object" ? f._id : f));
+  }, [rawFavorites]);
+
+  useSyncSearchParams(
+    filters,
+    query,
+    isUsingMySizes,
+    setFilters,
+    setIsUsingMySizes
+  );
+  useFetchListings(searchParams, query, setListings, setCount);
+
+  const handleClearAll = () => {
+    setFilters({
+      department: [],
+      category: [],
+      size: [],
+      condition: [],
+      priceMin: null,
+      priceMax: null,
+    });
+  };
+
+  const sortedListings = [...listings];
+  if (sortOption === "price_low_high") {
+    sortedListings.sort((a, b) => a.price - b.price);
+  } else if (sortOption === "price_high_low") {
+    sortedListings.sort((a, b) => b.price - a.price);
+  } else if (sortOption === "recent") {
+    sortedListings.sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
+  }
+
+  const handleFavorite = async (listingId) => {
+    if (!isLoggedIn || !userId) {
+      console.log("🔒 Not logged in");
+      return;
+    }
+
+    const isAlreadyFavorited = favoriteIds.includes(listingId);
+
+    try {
+      let updatedFavorites;
+
+      if (isAlreadyFavorited) {
+        const res = await fetch(
+          `http://localhost:5000/api/users/${userId}/favorites/${listingId}`,
+          {
+            method: "DELETE",
+          }
+        );
+        const data = await res.json();
+        updatedFavorites = data.favorites;
+      } else {
+        const res = await fetch(
+          `http://localhost:5000/api/users/${userId}/favorites`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ listingId }),
+          }
+        );
+        const data = await res.json();
+        updatedFavorites = data.favorites;
+      }
+
+      setUser({
+        ...useAuthStore.getState().user,
+        favorites: [...updatedFavorites],
+      });
+      forceUpdate((prev) => !prev);
+    } catch (err) {
+      console.error("❌ Failed to toggle favorite", err);
+    }
+  };
+
   return (
     <>
       <Container>
         <Heading size="lg" mb={4} mt={4}>
-          Knee High Bogun
+          {query}
         </Heading>
 
         <Box position="sticky" top="70px" bg="white" zIndex={10} py={3}>
           <Flex justify="space-between" align="center">
-            <HStack spacing={3}>
-              <Text>
-                19 listings for <b>“Knee High Bogun”</b>
-              </Text>
-              <Button size="xs" variant="ghost">
+            {query ? (
+              <HStack spacing={3}>
+                <Text>
+                  {count} {count === 1 ? "result" : "results"} for "{query}"
+                </Text>
+                <Button size="xs" variant="ghost" onClick={handleClearAll}>
+                  Clear All
+                </Button>
+              </HStack>
+            ) : (
+              <Button size="xs" variant="ghost" onClick={handleClearAll}>
                 Clear All
               </Button>
-            </HStack>
-            <Select size="sm" w="auto" defaultValue="default">
+            )}
+            <Select
+              size="sm"
+              w="auto"
+              value={sortOption}
+              onChange={(e) => setSortOption(e.target.value)}
+            >
               <option value="default">Sort by: Default</option>
               <option value="price_low_high">Price: Low to High</option>
               <option value="price_high_low">Price: High to Low</option>
@@ -58,33 +181,36 @@ export default function SearchResults() {
         </Box>
 
         <Flex align="start" gap={6} mt={6}>
-          {/* Sidebar */}
-          <FilterSidebar />
-
-          {/* Main Content */}
+          <FilterSidebar
+            filters={filters}
+            setFilters={setFilters}
+            isUsingMySizes={isUsingMySizes}
+            setIsUsingMySizes={setIsUsingMySizes}
+            query={query}
+          />
           <Box flex="1">
             <Grid templateColumns="repeat(4, 1fr)" gap={6}>
-              {listings.map((item, index) => (
+              {sortedListings.map((item) => (
                 <Box
-                  key={index}
+                  key={item._id}
                   borderWidth="1px"
                   borderRadius="md"
                   overflow="hidden"
                 >
                   <Box
                     as={RouterLink}
-                    to="/listing"
+                    to={`/listing/${item._id}`}
                     _hover={{ textDecoration: "none" }}
                   >
                     <Box position="relative" height="200px">
                       <Image
-                        src={item.imageUrl}
+                        src={item.thumbnail}
                         alt={item.title}
                         height="100%"
                         width="100%"
                         objectFit="cover"
                       />
-                      {item.freeShipping && (
+                      {item.isFreeShipping && (
                         <Badge
                           position="absolute"
                           top="16px"
@@ -103,7 +229,7 @@ export default function SearchResults() {
                     </Box>
                     <Box p={3}>
                       <Text fontSize="xs" color="gray.500">
-                        {item.timestamp}
+                        {getTimestamp(item.createdAt)}
                       </Text>
                       <Box
                         borderBottom="1px solid"
@@ -126,31 +252,40 @@ export default function SearchResults() {
                   <Box px={3} pb={3}>
                     <HStack justify="space-between" mt={2}>
                       <HStack spacing={2}>
-                        {item.oldPrice && (
+                        {item.originalPrice && (
                           <Text
                             fontSize="sm"
                             color="gray.500"
                             textDecoration="line-through"
                           >
-                            {item.oldPrice}
+                            ${item.originalPrice.toLocaleString()}
                           </Text>
                         )}
                         <Text fontSize="sm" fontWeight="bold">
-                          {item.price}
+                          ${item.price.toLocaleString()}
                         </Text>
                       </HStack>
-                      <HStack>
-                        <IconButton
-                          size="sm"
-                          icon={<FaRegClock />}
-                          aria-label="Remind"
-                        />
-                        <IconButton
-                          size="sm"
-                          icon={<FaRegHeart />}
-                          aria-label="Unfavorite"
-                        />
-                      </HStack>
+
+                      <IconButton
+                        size="sm"
+                        icon={
+                          favoriteIds.includes(item._id) ? (
+                            <FaHeart color="black" />
+                          ) : (
+                            <FaRegHeart />
+                          )
+                        }
+                        aria-label={
+                          favoriteIds.includes(item._id)
+                            ? "Unfavorite"
+                            : "Favorite"
+                        }
+                        onClick={() =>
+                          isLoggedIn
+                            ? handleFavorite(item._id)
+                            : onOpenAuthModal("register")
+                        }
+                      />
                     </HStack>
                   </Box>
                 </Box>

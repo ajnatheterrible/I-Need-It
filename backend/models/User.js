@@ -42,6 +42,7 @@ const UserSchema = new mongoose.Schema(
       enum: ["local", "google"],
       required: true,
       default: "local",
+      index: true,
     },
     profileImage: {
       type: String,
@@ -51,6 +52,51 @@ const UserSchema = new mongoose.Schema(
       type: String,
       maxlength: 500,
       default: "",
+    },
+    listings: [{ type: mongoose.Schema.Types.ObjectId, ref: "Listing" }],
+    drafts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Listing" }],
+    purchases: [{ type: mongoose.Schema.Types.ObjectId, ref: "Listing" }],
+    soldItems: [{ type: mongoose.Schema.Types.ObjectId, ref: "Listing" }],
+    favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: "Listing" }],
+    reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: "Review" }],
+    messages: [{ type: mongoose.Schema.Types.ObjectId, ref: "Thread" }],
+    isDemo: {
+      type: Boolean,
+      default: false,
+    },
+    role: {
+      type: String,
+      enum: ["user", "admin", "demo"],
+      default: "user",
+      index: true,
+    },
+    settings: {
+      address: { type: String, default: "" },
+      paymentMethod: { type: String, default: "" },
+      favoritesPublic: { type: Boolean, default: true },
+      closetPublic: { type: Boolean, default: false },
+      followersPublic: { type: Boolean, default: true },
+      followingPublic: { type: Boolean, default: true },
+      sizes: {
+        menswear: {
+          Tops: [String],
+          Bottoms: [String],
+          Outerwear: [String],
+          Footwear: [String],
+          Tailoring: [String],
+          Accessories: [String],
+        },
+        womenswear: {
+          Tops: [String],
+          Bottoms: [String],
+          Outerwear: [String],
+          Footwear: [String],
+          Dresses: [String],
+          Accessories: [String],
+          Bags: [String],
+          Jewelry: [String],
+        },
+      },
     },
     permissions: {
       type: String,
@@ -64,9 +110,11 @@ const UserSchema = new mongoose.Schema(
           ? new Date()
           : undefined;
       },
+      index: true,
     },
     resetPasswordToken: {
       type: String,
+      index: true,
     },
     resetPasswordExpires: {
       type: Date,
@@ -81,6 +129,7 @@ UserSchema.pre("save", async function (next) {
   }
 
   if (!this.isModified("password") || !this.password) return next();
+
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);

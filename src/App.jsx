@@ -70,7 +70,8 @@ export default function App() {
           <Route path="settings-seller" element={<SellerSettings />} />
         </Route>
 
-        <Route path="search-results" element={<SearchResults />} />
+        <Route path="shop" element={<SearchResults />} />
+        <Route path="listing/:id" element={<Listing />} />
         <Route path="listing" element={<Listing />} />
         <Route path="help" element={<Help />} />
         <Route path="about" element={<About />} />

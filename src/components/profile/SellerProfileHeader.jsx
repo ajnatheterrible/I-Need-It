@@ -18,10 +18,12 @@ import {
 import { FaStar } from "react-icons/fa";
 import { FiShare2, FiMapPin, FiAward, FiZap } from "react-icons/fi";
 import { Link as RouterLink } from "react-router-dom";
+import useAuthStore from "../../store/authStore";
 
 export default function SellerProfileHeader() {
   const url = window.location.href;
   const { onCopy } = useClipboard(url);
+  const { user } = useAuthStore();
 
   return (
     <Box w="full" pb={6}>
@@ -38,7 +40,7 @@ export default function SellerProfileHeader() {
             <VStack align="start" spacing={0}>
               <HStack spacing={1}>
                 <Text fontWeight="bold" fontSize="2xl">
-                  amnesia_
+                  {user.username}
                 </Text>
                 <Tooltip
                   label="Trusted Seller"

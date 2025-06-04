@@ -23,11 +23,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@chakra-ui/react";
+import useAuthStore from "../../store/authStore";
 
 export default function UserProfileHeader() {
   const url = window.location.href;
   const { onCopy } = useClipboard(url);
   const location = useLocation();
+  const { user } = useAuthStore();
 
   const getActiveTab = () => {
     if (location.pathname === "/profile") return "Selling";
@@ -52,7 +54,7 @@ export default function UserProfileHeader() {
             />
             <VStack align="start" spacing={0}>
               <Text fontWeight="bold" fontSize="2xl">
-                amnesia_
+                {user.username}
               </Text>
               <Text fontSize="sm" color="gray.600">
                 41 Transactions
