@@ -31,11 +31,12 @@ import useSyncSearchParams from "../hooks/useSyncSearchParams";
 import useFetchFavorites from "../hooks/useFetchFavorites";
 import useFetchSizes from "../hooks/useFetchSizes";
 import useAuthStore from "../store/authStore";
+import { useAuthModal } from "../context/AuthModalContext";
 
 export default function SearchResults() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { onOpenAuthModal } = useOutletContext();
+  const onOpenAuthModal = useAuthModal();
   const query = searchParams.get("query");
 
   const user = useAuthStore((s) => s.user);
