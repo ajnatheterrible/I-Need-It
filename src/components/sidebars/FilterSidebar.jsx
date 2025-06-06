@@ -15,6 +15,7 @@ import { ChevronUpIcon, ChevronDownIcon } from "@chakra-ui/icons";
 import { useState } from "react";
 import { useSearchParams, useOutletContext } from "react-router-dom";
 import useAuthStore from "../../store/authStore";
+import { useAuthModal } from "../../context/AuthModalContext";
 
 export default function FilterSidebar({
   filters,
@@ -51,7 +52,7 @@ export default function FilterSidebar({
   ];
 
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
-  const { onOpenAuthModal } = useOutletContext();
+  const onOpenAuthModal = useAuthModal();
 
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get("query");

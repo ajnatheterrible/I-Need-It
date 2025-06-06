@@ -4,7 +4,7 @@ const useAuthStore = create((set) => ({
   user: null,
   token: null,
   isLoggedIn: false,
-  permissions: null,
+  initialized: false,
 
   setUser: (newUserData) =>
     set((state) => ({
@@ -18,8 +18,8 @@ const useAuthStore = create((set) => ({
     set({
       user: userData,
       token,
-      permissions: userData.permissions,
       isLoggedIn: true,
+      initialized: true,
     });
   },
 
@@ -40,6 +40,7 @@ const useAuthStore = create((set) => ({
       user: null,
       token: null,
       isLoggedIn: false,
+      initialized: true,
     });
   },
 
@@ -54,7 +55,10 @@ const useAuthStore = create((set) => ({
         user,
         permissions,
         isLoggedIn: true,
+        initialized: true,
       });
+    } else {
+      set({ initialized: true });
     }
   },
 }));

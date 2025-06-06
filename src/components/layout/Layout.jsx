@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import { useState, useEffect } from "react";
 import useAuthStore from "../../store/authStore";
 import { useNavigate, useLocation } from "react-router-dom";
+import { AuthModalContext } from "../../context/AuthModalContext";
 
 import { Box } from "@chakra-ui/react";
 import Navbar from "./Navbar";
@@ -12,6 +13,7 @@ import OAuthErrorModal from "../modals/OAuthErrorModal";
 
 export default function Layout() {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const initialized = useAuthStore((state) => state.initialized);
   const loadUserFromStorage = useAuthStore(
     (state) => state.loadUserFromStorage
   );
@@ -22,10 +24,15 @@ export default function Layout() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authView, setAuthView] = useState("login");
 
+  const onOpenAuthModal = (view) => {
+    setAuthView(view);
+    setIsAuthOpen(true);
+  };
+
   useEffect(() => {
     loadUserFromStorage();
 
-    if (!isLoggedIn) {
+    if (initialized && !isLoggedIn) {
       fetch("http://localhost:5000/api/auth/me", {
         credentials: "include",
       })
@@ -43,7 +50,7 @@ export default function Layout() {
           console.error("Not logged in via cookie", err);
         });
     }
-  }, [isLoggedIn, loadUserFromStorage, login]);
+  }, [initialized, isLoggedIn, loadUserFromStorage, login]);
 
   const location = useLocation();
   const [oauthError, setOAuthError] = useState(null);
@@ -68,43 +75,36 @@ export default function Layout() {
   };
 
   return (
-    <Box minHeight="100vh">
-      <ScrollToTop />
+    <AuthModalContext.Provider value={onOpenAuthModal}>
+      <Box minHeight="100vh">
+        <ScrollToTop />
 
-      {isLoggedIn ? (
-        <Navbar />
-      ) : (
-        <NavbarGuest
-          onOpenAuthModal={(view) => {
-            setAuthView(view);
-            setIsAuthOpen(true);
-          }}
+        {isLoggedIn ? <Navbar /> : <NavbarGuest />}
+
+        <AuthModal
+          isOpen={isAuthOpen}
+          onClose={() => setIsAuthOpen(false)}
+          view={authView}
+          setView={setAuthView}
         />
-      )}
 
-      <AuthModal
-        isOpen={isAuthOpen}
-        onClose={() => setIsAuthOpen(false)}
-        view={authView}
-        setView={setAuthView}
-      />
+        <Box pt={!isLoggedIn ? "72px" : undefined}>
+          <Outlet
+            context={{
+              onOpenAuthModal: (view) => {
+                setAuthView(view);
+                setIsAuthOpen(true);
+              },
+            }}
+          />
+        </Box>
 
-      <Box pt={!isLoggedIn ? "72px" : undefined}>
-        <Outlet
-          context={{
-            onOpenAuthModal: (view) => {
-              setAuthView(view);
-              setIsAuthOpen(true);
-            },
-          }}
+        <OAuthErrorModal
+          isOpen={!!oauthError}
+          onClose={handleOAuthModalClose}
+          errorType={oauthError}
         />
       </Box>
-
-      <OAuthErrorModal
-        isOpen={!!oauthError}
-        onClose={handleOAuthModalClose}
-        errorType={oauthError}
-      />
-    </Box>
+    </AuthModalContext.Provider>
   );
 }

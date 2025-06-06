@@ -8,6 +8,7 @@ import {
   Badge,
   Flex,
 } from "@chakra-ui/react";
+import { useState } from "react";
 import FilterSidebar from "../../components/sidebars/FilterSidebar";
 
 const listings = Array(12).fill({
@@ -15,19 +16,42 @@ const listings = Array(12).fill({
   brand: "THE VIRIDI-ANNE",
   title: "Leather mask hooded jacket",
   size: "M",
-  price: "$1200",
+  price: 1200,
   timestamp: "about 5 hours ago",
   freeShipping: true,
   imageUrl: "/placeholder.jpg",
 });
 
 export default function Profile() {
+  const [filters, setFilters] = useState({
+    department: [],
+    category: [],
+    size: [],
+    condition: [],
+    priceMin: null,
+    priceMax: null,
+  });
+
+  const [isUsingMySizes, setIsUsingMySizes] = useState(false);
+  const [sortOption, setSortOption] = useState("default");
+
+  const sortedListings = [...listings].sort((a, b) => {
+    if (sortOption === "price_low_high") return a.price - b.price;
+    if (sortOption === "price_high_low") return b.price - a.price;
+    return 0;
+  });
+
   return (
     <>
       <Box position="sticky" top="70px" bg="white" zIndex={10} py={6}>
         <Flex justify="space-between" align="center">
-          <Text fontWeight="semibold">12 listings</Text>
-          <Select size="sm" w="auto" defaultValue="default">
+          <Text fontWeight="semibold">{listings.length} listings</Text>
+          <Select
+            size="sm"
+            w="auto"
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value)}
+          >
             <option value="default">Sort by: Default</option>
             <option value="price_low_high">Price: Low to High</option>
             <option value="price_high_low">Price: High to Low</option>
@@ -36,12 +60,17 @@ export default function Profile() {
         </Flex>
       </Box>
 
-      <HStack align="start" gap={6}>
-        <FilterSidebar />
+      <HStack align="start" gap={6} pb={10}>
+        <FilterSidebar
+          filters={filters}
+          setFilters={setFilters}
+          isUsingMySizes={isUsingMySizes}
+          setIsUsingMySizes={setIsUsingMySizes}
+        />
 
         <Box flex="1">
-          <SimpleGrid columns={4} spacing={6} w="full" pb={10}>
-            {listings.map((item, i) => (
+          <SimpleGrid columns={4} spacing={6} w="full">
+            {sortedListings.map((item, i) => (
               <Box
                 key={i}
                 borderWidth="1px"
@@ -91,7 +120,7 @@ export default function Profile() {
                     {item.title}
                   </Text>
                   <Text fontSize="sm" fontWeight="bold" mt={2}>
-                    {item.price}
+                    ${item.price.toLocaleString()}
                   </Text>
                 </Box>
               </Box>

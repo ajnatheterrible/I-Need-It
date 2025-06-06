@@ -13,8 +13,11 @@ import { SearchIcon } from "@chakra-ui/icons";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Container from "../shared/Container";
+import { useAuthModal } from "../../context/AuthModalContext";
 
-export default function NavbarGuest({ onOpenAuthModal }) {
+export default function NavbarGuest() {
+  const onOpenAuthModal = useAuthModal();
+
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
 

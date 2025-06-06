@@ -13,6 +13,8 @@ export default function useSyncSearchParams(
   const sizes = useAuthStore((s) => s.user?.settings?.sizes);
 
   useEffect(() => {
+    if (query === null || query === undefined) return;
+
     if (!query) {
       setFilters({
         department: [],

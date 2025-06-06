@@ -89,16 +89,18 @@ exports.loginUser = asyncHandler(async (req, res) => {
       _id: user._id,
       username: user.username,
       email: user.email,
+      permissions: user.permissions,
     },
     token,
   });
 });
 
 exports.requestPasswordReset = asyncHandler(async (req, res) => {
-  const { email } = req.body;
+  const email = req.body.email?.toLowerCase();
+
   if (!email) throw createError("Email is required", 400);
 
-  const user = await User.findOne({ email: email.toLowerCase() });
+  const user = await User.findOne({ email });
   if (!user || user.authProvider !== "local") {
     return res
       .status(200)
