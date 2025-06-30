@@ -1,4 +1,3 @@
-/* === GLOBAL RESET === */
 html,
 body,
 #root {
@@ -8,14 +7,12 @@ body,
   min-height: 100vh;
 }
 
-/* === BOX SIZING RESET === */
 *,
 *::before,
 *::after {
   box-sizing: border-box;
 }
 
-/* === TYPOGRAPHY BASELINE (Optional, override w/ Chakra theme if desired) === */
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;

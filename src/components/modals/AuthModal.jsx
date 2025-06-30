@@ -13,15 +13,16 @@ import {
   Text,
   Link,
 } from "@chakra-ui/react";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import validator from "validator";
-import useAuthStore from "../../store/authStore";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple } from "react-icons/fa";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import PasswordInput from "../shared/PasswordInput";
+import validator from "validator";
+import useAuthStore from "../../store/authStore";
 
 export default function AuthModal({
+  finalFocusRef,
   isOpen,
   onClose,
   view = "login",
@@ -36,7 +37,7 @@ export default function AuthModal({
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const login = useAuthStore((state) => state.login);
+  const login = useAuthStore((s) => s.login);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -83,8 +84,7 @@ export default function AuthModal({
       const data = await res.json();
 
       if (res.ok) {
-        login(data.user, data.token);
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        login(data.user, data.accessToken);
         onClose();
       } else {
         setErrorMessage(data.message || "Something went wrong");
@@ -101,7 +101,13 @@ export default function AuthModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} isCentered size="md">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      isCentered
+      size="md"
+      finalFocusRef={finalFocusRef}
+    >
       <ModalOverlay bg="blackAlpha.800" backdropFilter="blur(4px)" />
       <ModalContent>
         <ModalHeader textAlign="center">

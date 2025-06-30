@@ -1,51 +1,34 @@
-const jwt = require("jsonwebtoken");
-const User = require("../models/User");
-const createError = require("../utils/createError");
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
+import createError from "../utils/createError.js";
+import asyncHandler from "../middleware/asyncHandler.js";
+import { generateRefreshToken } from "../utils/jwt.js";
 
-exports.handleGoogleCallback = (req, res) => {
-  const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, {
-    expiresIn: "1d",
-  });
+export const handleGoogleCallback = (req, res) => {
+  const refreshToken = generateRefreshToken(req.user._id);
 
-  res.cookie("token", token, {
+  res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
-    secure: false,
+    secure: process.env.NODE_ENV === "production",
     sameSite: "Lax",
-    maxAge: 24 * 60 * 60 * 1000,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
-  const hasUsername = !!req.user.username;
-
-  res.redirect(
-    hasUsername
-      ? "http://localhost:5173/"
-      : "http://localhost:5173/complete-signup"
-  );
+  if (req.user && !req.user.username) {
+    res.redirect("http://localhost:5173/complete-signup");
+  } else {
+    res.redirect("http://localhost:5173/");
+  }
 };
 
-exports.getCurrentUser = require("../middleware/asyncHandler")(
-  async (req, res) => {
-    const token = req.cookies.token;
-    if (!token) {
-      return res.status(200).json({ user: null });
-    }
+export const patchUser = asyncHandler(async (req, res) => {
+  const user = req.user;
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select("-password");
+  if (!user) throw createError("Not authenticated", 401);
 
-    if (!user) {
-      return res.status(200).json({ user: null });
-    }
-
-    res.json({ user });
-  }
-);
-
-exports.patchUser = require("../middleware/asyncHandler")(async (req, res) => {
   const { username } = req.body;
 
-  const isValid = /^[a-zA-Z0-9]{3,30}$/.test(username);
-  if (!isValid) {
+  if (!/^[a-zA-Z0-9]{3,30}$/.test(username)) {
     throw createError(
       "Username must be 3–30 characters, letters and numbers only.",
       400
@@ -53,23 +36,8 @@ exports.patchUser = require("../middleware/asyncHandler")(async (req, res) => {
   }
 
   const usernameLower = username.toLowerCase();
-
   const existing = await User.findOne({ usernameLower });
-  if (existing) {
-    throw createError("Username is already taken.", 400);
-  }
-
-  const token = req.cookies.token;
-  if (!token) {
-    throw createError("Not authenticated", 401);
-  }
-
-  const decoded = jwt.verify(token, process.env.JWT_SECRET);
-  const user = await User.findById(decoded.id);
-
-  if (!user) {
-    throw createError("User not found", 404);
-  }
+  if (existing) throw createError("Username is already taken.", 400);
 
   user.username = username;
   user.signupIncompleteAt = undefined;
@@ -78,22 +46,14 @@ exports.patchUser = require("../middleware/asyncHandler")(async (req, res) => {
   res.status(200).json({ user });
 });
 
-exports.cancelGoogleSignup = require("../middleware/asyncHandler")(
-  async (req, res) => {
-    const token = req.cookies.token;
+export const cancelGoogleSignup = asyncHandler(async (req, res) => {
+  const user = req.user;
 
-    if (!token) {
-      return res.redirect("/");
-    }
+  if (!user) return res.redirect("/");
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    const user = await User.findById(decoded.id);
-
-    if (user && user.authProvider === "google" && !user.username) {
-      await User.deleteOne({ _id: user._id });
-    }
-
-    res.status(200).json({ message: "User deleted and logged out." });
+  if (user && user.authProvider === "google" && !user.username) {
+    await User.deleteOne({ _id: user._id });
   }
-);
+
+  res.status(200).json({ message: "User deleted and logged out." });
+});

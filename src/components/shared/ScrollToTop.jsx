@@ -5,7 +5,11 @@ export default function ScrollToTop() {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    const timeout = setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: "auto" });
+    }, 10);
+
+    return () => clearTimeout(timeout);
   }, [pathname]);
 
   return null;

@@ -12,6 +12,7 @@
   "dependencies": {
     "@chakra-ui/icons": "^2.2.4",
     "@chakra-ui/react": "^2.8.1",
+    "@dnd-kit/modifiers": "^9.0.0",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "bcrypt": "^6.0.0",
@@ -22,6 +23,7 @@
     "react-dom": "^18.2.0",
     "react-icons": "^5.5.0",
     "react-router-dom": "^7.5.3",
+    "react-spinners": "^0.17.0",
     "validator": "^13.15.0",
     "zustand": "^5.0.3"
   },

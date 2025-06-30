@@ -1,10 +1,10 @@
-const passport = require("passport");
-const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const jwt = require("jsonwebtoken");
-const dotenv = require("dotenv");
-const User = require("../models/User");
-const asyncHandler = require("../middleware/asyncHandler");
-const createError = require("../utils/createError");
+import passport from "passport";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+import User from "../models/User.js";
+import asyncHandler from "../middleware/asyncHandler.js";
+import createError from "../utils/createError.js";
 
 dotenv.config();
 
@@ -17,18 +17,12 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
+        const email = profile.emails?.[0]?.value;
+        if (!email)
+          return done(new Error("Missing email from Google profile"), false);
+
         const existingUser = await User.findOne({ googleId: profile.id });
         if (existingUser) return done(null, existingUser);
-
-        const email = profile.emails?.[0]?.value;
-        if (!email) {
-          const err = createError(
-            "Google account does not have a valid email",
-            400
-          );
-          err.name = "MissingEmail";
-          return done(err, false);
-        }
 
         const existingByEmail = await User.findOne({ email });
         if (existingByEmail && !existingByEmail.googleId) {
@@ -45,27 +39,25 @@ passport.use(
 
         return done(null, newUser);
       } catch (err) {
+        console.log(err);
         return done(err, false);
       }
     }
   )
 );
 
-const requireUsername = asyncHandler(async (req, res, next) => {
+export const requireUsername = asyncHandler(async (req, res, next) => {
   const token = req.cookies.token;
   if (!token) return res.redirect("/");
 
   const decoded = jwt.verify(token, process.env.JWT_SECRET);
   const user = await User.findById(decoded.id);
 
-  if (!user || user.username === null) {
+  if (!user || !user.username) {
     return res.redirect("/complete-signup");
   }
 
   next();
 });
 
-module.exports = {
-  passport,
-  requireUsername,
-};
+export default passport;

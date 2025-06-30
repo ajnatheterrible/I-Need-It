@@ -1,47 +1,50 @@
-const express = require("express");
-const router = express.Router();
-const passport = require("passport");
-const rateLimit = require("express-rate-limit");
+import express from "express";
+import passport from "passport";
+import rateLimit from "express-rate-limit";
 
-const {
+import {
   registerUser,
   loginUser,
+  logoutUser,
   requestPasswordReset,
   resetPassword,
   validateResetToken,
-} = require("../controllers/authController");
-const {
+  refreshAccessToken,
+} from "../controllers/authController.js";
+
+import {
   handleGoogleCallback,
-  getCurrentUser,
-  setUsername,
   patchUser,
   cancelGoogleSignup,
-} = require("../controllers/oauthController");
+} from "../controllers/oauthController.js";
+
+import requireAuth from "../middleware/requireAuth.js";
+
+const router = express.Router();
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
+  skipSuccessfulRequests: true,
   message: { message: "Too many attempts. Please try again later." },
 });
 
 const shorterLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
+  skipSuccessfulRequests: true,
   message: { message: "Too many reset attempts. Please wait and try again." },
 });
 
+// Local auth
 router.post("/register", limiter, registerUser);
 router.post("/login", limiter, loginUser);
-router.post("/logout", (req, res) => {
-  res.clearCookie("token", {
-    httpOnly: true,
-    secure: false,
-    sameSite: "Lax",
-  });
+router.post("/logout", logoutUser);
 
-  res.status(200).json({ message: "Logged out" });
-});
+// Refresh token
+router.post("/refresh", refreshAccessToken);
 
+// Google OAuth
 router.get(
   "/google",
   passport.authenticate("google", {
@@ -74,11 +77,12 @@ router.get(
   handleGoogleCallback
 );
 
-router.post("/cancel-google-signup", cancelGoogleSignup);
-router.get("/me", getCurrentUser);
-router.patch("/complete-signup", limiter, patchUser);
+router.post("/cancel-google-signup", requireAuth, cancelGoogleSignup);
+router.patch("/complete-signup", requireAuth, patchUser);
+
+// Password reset
 router.post("/request-password-reset", requestPasswordReset);
 router.post("/validate-reset-token", validateResetToken);
-router.post("/reset-password", resetPassword);
+router.post("/reset-password", limiter, resetPassword);
 
-module.exports = router;
+export default router;

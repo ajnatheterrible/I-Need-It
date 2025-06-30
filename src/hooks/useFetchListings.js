@@ -4,10 +4,12 @@ export default function useFetchListings(
   searchParams,
   query,
   setListings,
-  setCount
+  setCount,
+  setIsLoading
 ) {
   useEffect(() => {
     const fetchListings = async () => {
+      setIsLoading(true);
       try {
         const url = query
           ? `http://localhost:5000/api/listings/feed?${searchParams.toString()}`
@@ -27,6 +29,8 @@ export default function useFetchListings(
         console.error("Failed to fetch listings:", err);
         setListings([]);
         setCount(0);
+      } finally {
+        setIsLoading(false);
       }
     };
 

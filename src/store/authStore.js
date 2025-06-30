@@ -4,23 +4,22 @@ const useAuthStore = create((set) => ({
   user: null,
   token: null,
   isLoggedIn: false,
-  initialized: false,
+  hasRefreshed: false,
 
   setUser: (newUserData) =>
-    set((state) => ({
-      user: { ...state.user, ...newUserData },
+    set((s) => ({
+      user: {
+        ...s.user,
+        ...newUserData,
+      },
     })),
 
-  login: (userData, token) => {
-    localStorage.setItem("user", JSON.stringify(userData));
-    localStorage.setItem("token", token);
-
-    set({
-      user: userData,
-      token,
+  login: (userData, newToken) => {
+    set((s) => ({
+      user: userData ?? s.user,
+      token: newToken ?? s.token,
       isLoggedIn: true,
-      initialized: true,
-    });
+    }));
   },
 
   logout: async (req, res) => {
@@ -33,32 +32,40 @@ const useAuthStore = create((set) => ({
       console.error("Failed to log out", err);
     }
 
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-
     set({
       user: null,
       token: null,
       isLoggedIn: false,
-      initialized: true,
+      hasRefreshed: true,
     });
   },
 
-  loadUserFromStorage: () => {
-    const token = localStorage.getItem("token");
-    const user = JSON.parse(localStorage.getItem("user"));
-    const permissions = user?.permissions;
-
-    if (token && user) {
-      set({
-        token,
-        user,
-        permissions,
-        isLoggedIn: true,
-        initialized: true,
+  loadUserFromRefresh: async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/refresh", {
+        method: "POST",
+        credentials: "include",
       });
-    } else {
-      set({ initialized: true });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message);
+
+      set({
+        user: data.user,
+        token: data.accessToken,
+        isLoggedIn: true,
+        hasRefreshed: true,
+      });
+    } catch (err) {
+      console.error("Could not refresh user:", err);
+
+      set({
+        user: null,
+        token: null,
+        isLoggedIn: false,
+        hasRefreshed: true,
+      });
     }
   },
 }));

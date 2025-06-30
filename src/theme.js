@@ -1,13 +1,32 @@
 import { extendTheme } from "@chakra-ui/react";
 
+const sharedDisabledStyle = {
+  cursor: "default",
+  opacity: 0.5,
+  color: "gray.700",
+};
+
 const theme = extendTheme({
   components: {
+    Input: {
+      baseStyle: {
+        field: {
+          _disabled: sharedDisabledStyle,
+        },
+      },
+    },
+    Select: {
+      baseStyle: {
+        field: {
+          _disabled: sharedDisabledStyle,
+        },
+      },
+    },
     Checkbox: {
       baseStyle: {
         control: {
           _disabled: {
             cursor: "default",
-            opacity: 1,
           },
         },
         label: {
@@ -27,7 +46,11 @@ const theme = extendTheme({
       baseStyle: {
         track: {
           _disabled: {
-            opacity: 1,
+            cursor: "default",
+          },
+        },
+        thumb: {
+          _disabled: {
             cursor: "default",
           },
         },
@@ -40,16 +63,6 @@ const theme = extendTheme({
           _disabled: {
             cursor: "default",
             pointerEvents: "auto",
-          },
-        },
-      },
-    },
-    Input: {
-      baseStyle: {
-        field: {
-          _disabled: {
-            opacity: 1,
-            cursor: "default",
           },
         },
       },

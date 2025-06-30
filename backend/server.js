@@ -1,17 +1,20 @@
-require("dotenv").config();
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-const passport = require("passport");
-const cookieParser = require("cookie-parser");
-const errorHandler = require("./middleware/errorHandler");
+import dotenv from "dotenv";
+import express from "express";
+import mongoose from "mongoose";
+import cors from "cors";
+import passport from "passport";
+import cookieParser from "cookie-parser";
 
-require("./config/passport");
+import errorHandler from "./middleware/errorHandler.js";
+import "./config/passport.js";
 
-const runCleanupJob = require("./cron/cleanup");
-const authRoutes = require("./routes/authRoutes");
-const listingRoutes = require("./routes/listingRoutes");
-const userRoutes = require("./routes/userRoutes");
+import runCleanupJob from "./cron/cleanup.js";
+import authRoutes from "./routes/authRoutes.js";
+import listingRoutes from "./routes/listingRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
+import marketRoutes from "./routes/marketRoutes.js";
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -30,6 +33,7 @@ app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/listings", listingRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/market", marketRoutes);
 
 mongoose
   .connect(process.env.MONGO_URI)

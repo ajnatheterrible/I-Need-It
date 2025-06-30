@@ -1,5 +1,5 @@
-const cron = require("node-cron");
-const User = require("../models/User");
+import cron from "node-cron";
+import User from "../models/User.js";
 
 const runCleanupJob = () => {
   cron.schedule("0 * * * *", async () => {
@@ -17,4 +17,4 @@ const runCleanupJob = () => {
   });
 };
 
-module.exports = runCleanupJob;
+export default runCleanupJob;

@@ -1,5 +1,6 @@
 const designers = [
   "Acne Studios",
+  "Acronym",
   "Amiri",
   "Arc'teryx",
   "Balenciaga",
@@ -13,16 +14,19 @@ const designers = [
   "Dior",
   "Enfants Riches Déprimés",
   "Gucci",
+  "Guerrilla Group",
   "Kapital",
   "Louis Vuitton",
   "Maison Margiela",
   "Moncler",
   "Nike",
+  "Paritially Human",
   "Polo Ralph Lauren",
   "Prada",
   "Raf Simons",
   "Rick Owens",
   "Saint Laurent Paris",
+  "Shine",
   "Stone Island",
   "Stussy",
   "Supreme",
@@ -31,6 +35,8 @@ const designers = [
   "Vintage",
   "Vivienne Westwood",
   "Yohji Yamamoto",
+  "Streetwear",
+  "Other",
 ];
 
 export default designers;

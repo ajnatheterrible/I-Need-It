@@ -1,51 +1,50 @@
-const User = require("../models/User");
-const asyncHandler = require("../middleware/asyncHandler");
-const createError = require("../utils/createError");
+import User from "../models/User.js";
+import asyncHandler from "../middleware/asyncHandler.js";
+import createError from "../utils/createError.js";
 
-exports.getUserById = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id).populate("favorites");
+export const getUserFavorites = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id).populate("favorites");
   if (!user) throw createError("User not found", 404);
-  res.status(200).json(user);
+  res.status(200).json(user.favorites);
 });
 
-exports.addFavorite = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id);
-  if (!user) throw createError("User not found", 404);
+export const addFavorite = asyncHandler(async (req, res) => {
+  const user = req.user;
+  const { listingId } = req.params;
 
-  const { listingId } = req.body;
   if (!user.favorites.includes(listingId)) {
     user.favorites.push(listingId);
     await user.save();
   }
 
-  res
-    .status(200)
-    .json({ message: "Added to favorites", favorites: user.favorites });
+  res.status(200).json({
+    message: "Added to favorites",
+    favorites: user.favorites,
+  });
 });
 
-exports.removeFavorite = asyncHandler(async (req, res) => {
-  const { id, listingId } = req.params;
-  const user = await User.findById(id);
-  if (!user) throw createError("User not found", 404);
+export const removeFavorite = asyncHandler(async (req, res) => {
+  const user = req.user;
+  const { listingId } = req.params;
 
   user.favorites = user.favorites.filter((fav) => fav.toString() !== listingId);
   await user.save();
 
-  res
-    .status(200)
-    .json({ message: "Removed from favorites", favorites: user.favorites });
+  res.status(200).json({
+    message: "Removed from favorites",
+    favorites: user.favorites,
+  });
 });
 
-exports.getUserSizes = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id).select("settings.sizes");
+export const getUserSizes = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id).select("settings.sizes");
   if (!user) throw createError("User not found", 404);
   res.status(200).json(user.settings.sizes || {});
 });
 
-exports.updateUserSizes = asyncHandler(async (req, res) => {
+export const updateUserSizes = asyncHandler(async (req, res) => {
+  const user = req.user;
   const { menswear, womenswear } = req.body;
-  const user = await User.findById(req.params.id);
-  if (!user) throw createError("User not found", 404);
 
   user.settings.sizes = {
     menswear: menswear || {},
@@ -53,6 +52,7 @@ exports.updateUserSizes = asyncHandler(async (req, res) => {
   };
 
   await user.save();
+
   res.status(200).json({
     message: "Sizes updated successfully",
     sizes: user.settings.sizes,

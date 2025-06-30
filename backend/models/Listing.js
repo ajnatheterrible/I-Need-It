@@ -1,22 +1,52 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
+import categoryMap from "../data/categoryMap.js";
+import countries from "../data/countries.js";
 
 const ListingSchema = new mongoose.Schema(
   {
-    title: { type: String, required: true, trim: true },
-    brand: { type: String, required: true, trim: true },
-    description: { type: String, maxlength: 1000 },
-    sellerDescription: { type: String, maxlength: 1000 },
-
-    originalPrice: { type: Number },
-    price: { type: Number, required: true, min: 0 },
-    thumbnail: { type: String },
+    title: {
+      type: String,
+      required() {
+        return !this.isDraft;
+      },
+      trim: true,
+    },
+    designer: {
+      type: String,
+      required() {
+        return !this.isDraft;
+      },
+      trim: true,
+    },
+    description: {
+      type: String,
+      maxlength: 1000,
+    },
+    originalPrice: Number,
+    price: {
+      type: Number,
+      required() {
+        return !this.isDraft;
+      },
+      min: 1,
+      max: 200000,
+    },
+    countryOfOrigin: {
+      type: String,
+      enum: countries,
+      required() {
+        return !this.isDraft;
+      },
+    },
+    thumbnail: String,
     isFreeShipping: { type: Boolean, default: false },
     shippingCost: { type: Number, default: 0 },
-
     department: {
       type: String,
       enum: ["Menswear", "Womenswear"],
-      required: true,
+      required() {
+        return !this.isDraft;
+      },
     },
     category: {
       type: String,
@@ -25,15 +55,32 @@ const ListingSchema = new mongoose.Schema(
         "Bottoms",
         "Outerwear",
         "Footwear",
-        "Tailoring",
         "Accessories",
         "Dresses",
+        "Bags & Luggage",
+        "Jewelry",
+        "Tailoring",
       ],
-      required: true,
+      required() {
+        return !this.isDraft;
+      },
+    },
+    subCategory: {
+      type: String,
+      validate: {
+        validator(value) {
+          if (this.isDraft) return true;
+          const department = this.department;
+          const category = this.category;
+          const validOptions = categoryMap[department]?.[category] || [];
+          return validOptions.includes(value);
+        },
+        message: (props) =>
+          `"${props.value}" is not a valid subcategory for the selected category.`,
+      },
     },
     size: {
       type: String,
-      required: true,
       enum: [
         "XXS",
         "XS",
@@ -52,36 +99,46 @@ const ListingSchema = new mongoose.Schema(
         "44",
         "45",
       ],
+      required() {
+        return !this.isDraft;
+      },
     },
     color: {
       type: String,
-      required: true,
       enum: [
-        "Black",
-        "White",
-        "Gray",
         "Beige",
+        "Black",
+        "Blue",
         "Brown",
+        "Gold",
+        "Gray",
+        "Green",
         "Navy",
         "Olive",
-        "Red",
-        "Blue",
+        "Orange",
+        "Other",
         "Pink",
         "Purple",
-        "Green",
-        "Other",
+        "Red",
+        "Silver",
+        "White",
+        "Yellow",
       ],
+      required() {
+        return !this.isDraft;
+      },
     },
     condition: {
       type: String,
-      required: true,
       enum: ["New/Never Worn", "Gently Used", "Used", "Very Worn"],
+      required() {
+        return !this.isDraft;
+      },
     },
-
     tags: [String],
     images: [String],
     favoritesCount: { type: Number, default: 0 },
-
+    messages: [{ type: mongoose.Schema.Types.ObjectId, ref: "Message" }],
     seller: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -92,17 +149,18 @@ const ListingSchema = new mongoose.Schema(
       ref: "User",
       default: null,
     },
-
     canOffer: { type: Boolean, default: true },
+    offers: [{ type: mongoose.Schema.Types.ObjectId, ref: "Offer" }],
     isSold: { type: Boolean, default: false },
     isDraft: { type: Boolean, default: false },
     isDeleted: { type: Boolean, default: false },
+    isArchived: { type: Boolean, default: false },
     authenticated: { type: Boolean, default: false },
-
-    listingCode: { type: String },
+    listingCode: String,
+    reports: [{ type: mongoose.Schema.Types.ObjectId, ref: "Report" }],
   },
   { timestamps: true }
 );
 
 const Listing = mongoose.model("Listing", ListingSchema);
-module.exports = Listing;
+export default Listing;

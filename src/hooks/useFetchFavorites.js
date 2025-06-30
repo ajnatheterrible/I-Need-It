@@ -3,26 +3,28 @@ import useAuthStore from "../store/authStore";
 
 export default function useFetchFavorites() {
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
-  const userId = useAuthStore((s) => s.user?._id);
+  const token = useAuthStore((s) => s.token);
   const setUser = useAuthStore((s) => s.setUser);
   const hasFetchedRef = useRef(false);
 
   useEffect(() => {
-    if (!isLoggedIn || !userId || hasFetchedRef.current) return;
+    if (!isLoggedIn || !token || hasFetchedRef.current) return;
 
     const fetchFavorites = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/users/${userId}`);
-        const data = await res.json();
+        const res = await fetch(`http://localhost:5000/api/users/favorites`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-        setUser({ favorites: data.favorites || [] });
+        if (!res.ok) throw new Error("Failed to fetch user data");
 
-        setTimeout(() => {
-          console.log(
-            "🧠 Zustand now has:",
-            useAuthStore.getState().user?.favorites
-          );
-        }, 300);
+        const favorites = await res.json();
+
+        setUser({ favorites });
 
         hasFetchedRef.current = true;
       } catch (err) {
@@ -31,5 +33,5 @@ export default function useFetchFavorites() {
     };
 
     fetchFavorites();
-  }, [isLoggedIn, userId]);
+  }, [isLoggedIn, token, setUser]);
 }

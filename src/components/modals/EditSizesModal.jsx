@@ -10,7 +10,6 @@ import {
   TabPanels,
   Tab,
   TabPanel,
-  VStack,
   Text,
   Box,
   Collapse,
@@ -26,74 +25,34 @@ import useAuthStore from "../../store/authStore";
 const SIZE_OPTIONS = {
   menswear: {
     Tops: ["XXS", "XS", "S", "M", "L", "XL", "XXL"],
-    Bottoms: [
-      "26",
-      "27",
-      "28",
-      "29",
-      "30",
-      "31",
-      "32",
-      "33",
-      "34",
-      "36",
-      "38",
-      "40",
-      "42",
-      "44",
-    ],
+    Bottoms: ["XXS", "XS", "S", "M", "L", "XL", "XXL"],
     Outerwear: ["XS", "S", "M", "L", "XL", "XXL"],
-    Footwear: [
-      "7",
-      "7.5",
-      "8",
-      "8.5",
-      "9",
-      "9.5",
-      "10",
-      "10.5",
-      "11",
-      "11.5",
-      "12",
-    ],
     Tailoring: ["XS", "S", "M", "L", "XL"],
-    Accessories: ["ONE SIZE"],
+    Footwear: ["38", "39", "40", "41", "42", "43", "44", "45"],
   },
   womenswear: {
     Tops: ["XXS", "XS", "S", "M", "L", "XL", "XXL"],
-    Bottoms: ["24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34"],
+    Bottoms: ["XXS", "XS", "S", "M", "L", "XL", "XXL"],
     Outerwear: ["XS", "S", "M", "L", "XL", "XXL"],
     Dresses: ["XXS", "XS", "S", "M", "L", "XL"],
-    Footwear: [
-      "5",
-      "5.5",
-      "6",
-      "6.5",
-      "7",
-      "7.5",
-      "8",
-      "8.5",
-      "9",
-      "9.5",
-      "10",
-    ],
-    Accessories: ["ONE SIZE"],
-    Bags: ["ONE SIZE"],
-    Jewelry: ["ONE SIZE"],
+    Footwear: ["38", "39", "40", "41", "42", "43", "44", "45"],
   },
 };
 
 export default function EditSizesModal({ isOpen, onClose }) {
   const user = useAuthStore((s) => s.user);
+  const token = useAuthStore((s) => s.token);
+  const setUser = useAuthStore((s) => s.setUser);
   const [activeTab, setActiveTab] = useState("menswear");
   const [sizes, setSizes] = useState({ menswear: {}, womenswear: {} });
   const [expanded, setExpanded] = useState({});
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   useEffect(() => {
-    if (user?.settings?.sizes) {
-      setSizes(user.settings.sizes);
+    if (isOpen && user?.sizes && Object.keys(user.sizes).length > 0) {
+      setSizes(user.sizes);
     }
-  }, [user]);
+  }, [isOpen, user]);
 
   const toggleSize = (department, category, size) => {
     setSizes((prev) => {
@@ -121,28 +80,29 @@ export default function EditSizesModal({ isOpen, onClose }) {
 
   const handleSave = async () => {
     try {
-      const res = await fetch(`/api/users/${user._id}/sizes`, {
+      setHasSubmitted(true);
+
+      const res = await fetch(`/api/users/sizes`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(sizes),
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        useAuthStore.getState().setUser({
-          ...user,
-          settings: {
-            ...user.settings,
-            sizes: data.sizes,
-          },
-        });
+        setUser({ sizes: data.sizes });
         onClose();
       } else {
         console.error("Failed to save sizes:", data.message);
       }
     } catch (err) {
       console.error("Save error:", err);
+    } finally {
+      setHasSubmitted(false);
     }
   };
 
@@ -184,9 +144,23 @@ export default function EditSizesModal({ isOpen, onClose }) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
       <ModalOverlay />
-      <ModalContent>
-        <ModalHeader textAlign="center">My Sizes</ModalHeader>
+      <ModalContent position="relative">
+        <ModalHeader textAlign="center" position="relative">
+          My Sizes
+          <Button
+            variant="ghost"
+            size="xs"
+            color="gray.500"
+            position="absolute"
+            right="48px"
+            top="16px"
+            onClick={() => setSizes({ menswear: {}, womenswear: {} })}
+          >
+            Clear All
+          </Button>
+        </ModalHeader>
         <ModalCloseButton />
+
         <ModalBody pb={6}>
           <Text fontSize="sm" textAlign="center" mb={4} color="gray.600">
             Set up to filter out listings that are not in your size
@@ -216,6 +190,7 @@ export default function EditSizesModal({ isOpen, onClose }) {
             width="100%"
             mt={4}
             onClick={handleSave}
+            disabled={hasSubmitted}
           >
             SAVE MY SIZES
           </Button>

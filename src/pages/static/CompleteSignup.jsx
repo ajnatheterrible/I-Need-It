@@ -13,7 +13,6 @@ import {
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../../store/authStore";
-import { FiArrowLeft } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import { HiOutlineArrowNarrowLeft } from "react-icons/hi";
 
@@ -29,46 +28,41 @@ function formatTime(ms) {
 }
 
 export default function CompleteSignup() {
-  const { user, login, setUser, logout } = useAuthStore();
+  const navigate = useNavigate();
+  const toast = useToast();
+
+  const { user, login, logout, loadUserFromRefresh } = useAuthStore();
+  const token = useAuthStore((s) => s.token);
+
+  const [hasRefreshed, setHasRefreshed] = useState(false);
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [showHint, setShowHint] = useState(false);
   const [timeLeft, setTimeLeft] = useState(null);
-  const navigate = useNavigate();
-  const toast = useToast();
+
+  const isValid = /^[a-zA-Z0-9]{3,30}$/.test(username);
 
   useEffect(() => {
+    const fetchUser = async () => {
+      await loadUserFromRefresh();
+      setHasRefreshed(true);
+    };
+
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    if (!hasRefreshed) return;
+
     if (user && user.username) {
       navigate("/");
     }
-  }, [user, navigate]);
+  }, [user, hasRefreshed, navigate]);
 
   useEffect(() => {
-    const getCurrentUser = async () => {
-      try {
-        const res = await fetch("http://localhost:5000/api/auth/me", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        });
+    if (!hasRefreshed) return;
 
-        const data = await res.json();
-
-        setUser(data.user, null);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    if (!user) {
-      getCurrentUser();
-    }
-  }, [user, setUser]);
-
-  useEffect(() => {
     if (user?.signupIncompleteAt) {
       const expiresAt =
         new Date(user.signupIncompleteAt).getTime() + 24 * 60 * 60 * 1000;
@@ -82,22 +76,39 @@ export default function CompleteSignup() {
       const interval = setInterval(updateTimeLeft, 1000);
       return () => clearInterval(interval);
     }
-  }, [user]);
+  }, [user, hasRefreshed]);
 
   useEffect(() => {
     if (timeLeft === 0) {
-      toast({
-        title: "Signup expired",
-        description: "Please start the signup process again.",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
-      navigate("/");
+      const handleExpiration = async () => {
+        try {
+          await fetch("http://localhost:5000/api/auth/cancel-google-signup", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          await logout();
+
+          toast({
+            title: "Signup expired",
+            description: "Please start the signup process again.",
+            status: "error",
+            duration: 5000,
+            isClosable: true,
+          });
+
+          navigate("/");
+        } catch (err) {
+          console.error("Auto-cancel signup failed:", err);
+        }
+      };
+
+      handleExpiration();
     }
   }, [timeLeft, toast, navigate]);
-
-  const isValid = /^[a-zA-Z0-9]{3,30}$/.test(username);
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -110,13 +121,13 @@ export default function CompleteSignup() {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-          credentials: "include",
           body: JSON.stringify({ username }),
         }
       );
 
-      const data = await res.json();
+      const user = await res.json();
 
       if (!res.ok) {
         setErrorMsg(data.message || "Username is taken.");
@@ -124,15 +135,7 @@ export default function CompleteSignup() {
         return;
       }
 
-      toast({
-        title: "Username set!",
-        description: "Your account is now complete",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-
-      login(data.user, null);
+      login(user);
       navigate("/");
     } catch (err) {
       console.error("🔥 Frontend fetch error:", err);
@@ -146,7 +149,10 @@ export default function CompleteSignup() {
     try {
       await fetch("http://localhost:5000/api/auth/cancel-google-signup", {
         method: "POST",
-        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       await logout();

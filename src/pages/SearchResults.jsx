@@ -24,6 +24,7 @@ import {
 import Container from "../components/shared/Container";
 import Footer from "../components/layout/Footer";
 import FilterSidebar from "../components/sidebars/FilterSidebar";
+import SearchResultsSkeleton from "../components/skeletons/SearchResultsSkeleton";
 
 import getTimestamp from "../utils/getTimestamp";
 import useFetchListings from "../hooks/useFetchListings";
@@ -34,19 +35,22 @@ import useAuthStore from "../store/authStore";
 import { useAuthModal } from "../context/AuthModalContext";
 
 export default function SearchResults() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const onOpenAuthModal = useAuthModal();
   const query = searchParams.get("query");
 
   const user = useAuthStore((s) => s.user);
-  const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
-  const setUser = useAuthStore((s) => s.setUser);
-  const sizes = useAuthStore((s) => s.user?.settings?.sizes);
   const userId = user?._id;
+  const token = useAuthStore((s) => s.token);
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
+  const sizes = useAuthStore((s) => s.user?.sizes);
+  const setUser = useAuthStore((s) => s.setUser);
 
   useFetchFavorites();
   useFetchSizes();
+
+  const [isLoading, setIsLoading] = useState(false);
 
   const [listings, setListings] = useState([]);
   const [count, setCount] = useState(0);
@@ -77,7 +81,7 @@ export default function SearchResults() {
     setFilters,
     setIsUsingMySizes
   );
-  useFetchListings(searchParams, query, setListings, setCount);
+  useFetchListings(searchParams, query, setListings, setCount, setIsLoading);
 
   const handleClearAll = () => {
     setFilters({
@@ -102,42 +106,28 @@ export default function SearchResults() {
   }
 
   const handleFavorite = async (listingId) => {
-    if (!isLoggedIn || !userId) {
-      console.log("🔒 Not logged in");
-      return;
-    }
+    if (!isLoggedIn || !userId) return;
 
     const isAlreadyFavorited = favoriteIds.includes(listingId);
+    const method = isAlreadyFavorited ? "DELETE" : "POST";
 
     try {
-      let updatedFavorites;
+      const res = await fetch(
+        `http://localhost:5000/api/users/favorites/${listingId}`,
+        {
+          method,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      if (isAlreadyFavorited) {
-        const res = await fetch(
-          `http://localhost:5000/api/users/${userId}/favorites/${listingId}`,
-          {
-            method: "DELETE",
-          }
-        );
-        const data = await res.json();
-        updatedFavorites = data.favorites;
-      } else {
-        const res = await fetch(
-          `http://localhost:5000/api/users/${userId}/favorites`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ listingId }),
-          }
-        );
-        const data = await res.json();
-        updatedFavorites = data.favorites;
-      }
+      const data = await res.json();
+      const updatedFavorites = data.favorites || [];
 
-      setUser({
-        ...useAuthStore.getState().user,
-        favorites: [...updatedFavorites],
-      });
+      setUser({ favorites: [...updatedFavorites] });
+
       forceUpdate((prev) => !prev);
     } catch (err) {
       console.error("❌ Failed to toggle favorite", err);
@@ -190,108 +180,112 @@ export default function SearchResults() {
             query={query}
           />
           <Box flex="1">
-            <Grid templateColumns="repeat(4, 1fr)" gap={6}>
-              {sortedListings.map((item) => (
-                <Box
-                  key={item._id}
-                  borderWidth="1px"
-                  borderRadius="md"
-                  overflow="hidden"
-                >
+            {isLoading ? (
+              <SearchResultsSkeleton />
+            ) : (
+              <Grid templateColumns="repeat(4, 1fr)" gap={6}>
+                {sortedListings.map((item) => (
                   <Box
-                    as={RouterLink}
-                    to={`/listing/${item._id}`}
-                    _hover={{ textDecoration: "none" }}
+                    key={item._id}
+                    borderWidth="1px"
+                    borderRadius="md"
+                    overflow="hidden"
                   >
-                    <Box position="relative" height="200px">
-                      <Image
-                        src={item.thumbnail}
-                        alt={item.title}
-                        height="100%"
-                        width="100%"
-                        objectFit="cover"
-                      />
-                      {item.isFreeShipping && (
-                        <Badge
-                          position="absolute"
-                          top="16px"
-                          left="8px"
-                          bg="#DCEF31"
-                          color="black"
-                          fontWeight="bold"
-                          fontSize="0.7em"
-                          px={2}
-                          py={1}
-                          borderRadius="sm"
-                        >
-                          FREE SHIPPING
-                        </Badge>
-                      )}
-                    </Box>
-                    <Box p={3}>
-                      <Text fontSize="xs" color="gray.500">
-                        {getTimestamp(item.createdAt)}
-                      </Text>
-                      <Box
-                        borderBottom="1px solid"
-                        borderColor="gray.200"
-                        my={2}
-                      />
-                      <HStack justify="space-between" mt={1}>
-                        <Text fontWeight="bold" fontSize="sm" noOfLines={1}>
-                          {item.brand}
-                        </Text>
-                        <Text fontSize="xs" color="gray.600">
-                          {item.size}
-                        </Text>
-                      </HStack>
-                      <Text fontSize="xs" color="gray.600" noOfLines={1}>
-                        {item.title}
-                      </Text>
-                    </Box>
-                  </Box>
-                  <Box px={3} pb={3}>
-                    <HStack justify="space-between" mt={2}>
-                      <HStack spacing={2}>
-                        {item.originalPrice && (
-                          <Text
-                            fontSize="sm"
-                            color="gray.500"
-                            textDecoration="line-through"
+                    <Box
+                      as={RouterLink}
+                      to={`/listing/${item._id}`}
+                      _hover={{ textDecoration: "none" }}
+                    >
+                      <Box position="relative" height="200px">
+                        <Image
+                          src={item.thumbnail}
+                          alt={item.title}
+                          height="100%"
+                          width="100%"
+                          objectFit="cover"
+                        />
+                        {item.isFreeShipping && (
+                          <Badge
+                            position="absolute"
+                            top="16px"
+                            left="8px"
+                            bg="#DCEF31"
+                            color="black"
+                            fontWeight="bold"
+                            fontSize="0.7em"
+                            px={2}
+                            py={1}
+                            borderRadius="sm"
                           >
-                            ${item.originalPrice.toLocaleString()}
-                          </Text>
+                            FREE SHIPPING
+                          </Badge>
                         )}
-                        <Text fontSize="sm" fontWeight="bold">
-                          ${item.price.toLocaleString()}
+                      </Box>
+                      <Box p={3}>
+                        <Text fontSize="xs" color="gray.500">
+                          {getTimestamp(item.createdAt)}
                         </Text>
-                      </HStack>
+                        <Box
+                          borderBottom="1px solid"
+                          borderColor="gray.200"
+                          my={2}
+                        />
+                        <HStack justify="space-between" mt={1}>
+                          <Text fontWeight="bold" fontSize="sm" noOfLines={1}>
+                            {item.designer}
+                          </Text>
+                          <Text fontSize="xs" color="gray.600">
+                            {item.size}
+                          </Text>
+                        </HStack>
+                        <Text fontSize="xs" color="gray.600" noOfLines={1}>
+                          {item.title}
+                        </Text>
+                      </Box>
+                    </Box>
+                    <Box px={3} pb={3}>
+                      <HStack justify="space-between" mt={2}>
+                        <HStack spacing={2}>
+                          {item.originalPrice && (
+                            <Text
+                              fontSize="sm"
+                              color="gray.500"
+                              textDecoration="line-through"
+                            >
+                              ${item.originalPrice.toLocaleString()}
+                            </Text>
+                          )}
+                          <Text fontSize="sm" fontWeight="bold">
+                            ${item.price.toLocaleString()}
+                          </Text>
+                        </HStack>
 
-                      <IconButton
-                        size="sm"
-                        icon={
-                          favoriteIds.includes(item._id) ? (
-                            <FaHeart color="black" />
-                          ) : (
-                            <FaRegHeart />
-                          )
-                        }
-                        aria-label={
-                          favoriteIds.includes(item._id)
-                            ? "Unfavorite"
-                            : "Favorite"
-                        }
-                        onClick={() =>
-                          isLoggedIn
-                            ? handleFavorite(item._id)
-                            : onOpenAuthModal("register")
-                        }
-                      />
-                    </HStack>
+                        <IconButton
+                          size="sm"
+                          icon={
+                            favoriteIds.includes(item._id) ? (
+                              <FaHeart color="black" />
+                            ) : (
+                              <FaRegHeart />
+                            )
+                          }
+                          aria-label={
+                            favoriteIds.includes(item._id)
+                              ? "Unfavorite"
+                              : "Favorite"
+                          }
+                          onClick={() =>
+                            isLoggedIn
+                              ? handleFavorite(item._id)
+                              : onOpenAuthModal("register")
+                          }
+                        />
+                      </HStack>
+                    </Box>
                   </Box>
-                </Box>
-              ))}
-            </Grid>
+                ))}
+              </Grid>
+            )}
           </Box>
         </Flex>
       </Container>

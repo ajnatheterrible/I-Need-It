@@ -1,10 +1,15 @@
-const mongoose = require("mongoose");
-const dotenv = require("dotenv");
-const Listing = require("../models/Listing");
-const User = require("../models/User");
-const sampleListings = require("./sampleListings.json");
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
+import Listing from "../models/Listing.js";
+import User from "../models/User.js";
+import sampleListings from "./sampleListings.json" assert { type: "json" };
 
-dotenv.config({ path: __dirname + "/../.env" });
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.join(__dirname, "../.env") });
 
 const seed = async () => {
   try {

@@ -1,17 +1,21 @@
-const express = require("express");
-const router = express.Router();
-
-const {
+import express from "express";
+import {
   getFeedListings,
   getListingById,
   getRandomListings,
-} = require("../controllers/listingController");
+  getDrafts,
+} from "../controllers/listingController.js";
+
+import requireAuth from "../middleware/requireAuth.js";
+
+const router = express.Router();
 
 router.get("/feed", getFeedListings);
 router.get("/random", getRandomListings);
+router.get("/get-drafts", requireAuth, getDrafts);
 router.get("/:id", getListingById);
 
 // POST /api/listings
 // router.post("/", createListing);
 
-module.exports = router;
+export default router;

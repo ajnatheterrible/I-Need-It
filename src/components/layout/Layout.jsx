@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import useAuthStore from "../../store/authStore";
 import { useNavigate, useLocation } from "react-router-dom";
 import { AuthModalContext } from "../../context/AuthModalContext";
@@ -12,57 +12,20 @@ import ScrollToTop from "../shared/ScrollToTop";
 import OAuthErrorModal from "../modals/OAuthErrorModal";
 
 export default function Layout() {
-  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
-  const initialized = useAuthStore((state) => state.initialized);
-  const loadUserFromStorage = useAuthStore(
-    (state) => state.loadUserFromStorage
-  );
-  const login = useAuthStore((state) => state.login);
+  const location = useLocation();
 
-  const navigate = useNavigate();
+  const fallbackRef = useRef(null);
 
+  const [oauthError, setOAuthError] = useState(null);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authView, setAuthView] = useState("login");
+
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
 
   const onOpenAuthModal = (view) => {
     setAuthView(view);
     setIsAuthOpen(true);
   };
-
-  useEffect(() => {
-    loadUserFromStorage();
-
-    if (initialized && !isLoggedIn) {
-      fetch("http://localhost:5000/api/auth/me", {
-        credentials: "include",
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.user) {
-            if (!data.user.username) {
-              navigate("/complete-signup");
-            } else {
-              login(data.user, null);
-            }
-          }
-        })
-        .catch((err) => {
-          console.error("Not logged in via cookie", err);
-        });
-    }
-  }, [initialized, isLoggedIn, loadUserFromStorage, login]);
-
-  const location = useLocation();
-  const [oauthError, setOAuthError] = useState(null);
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const errorParam = params.get("error");
-
-    if (errorParam) {
-      setOAuthError(errorParam);
-    }
-  }, [location.search]);
 
   const handleOAuthModalClose = () => {
     setOAuthError(null);
@@ -74,6 +37,15 @@ export default function Layout() {
     window.history.replaceState({}, "", newPath);
   };
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const errorParam = params.get("error");
+
+    if (errorParam) {
+      setOAuthError(errorParam);
+    }
+  }, [location.search]);
+
   return (
     <AuthModalContext.Provider value={onOpenAuthModal}>
       <Box minHeight="100vh">
@@ -81,11 +53,22 @@ export default function Layout() {
 
         {isLoggedIn ? <Navbar /> : <NavbarGuest />}
 
+        <Box
+          ref={fallbackRef}
+          tabIndex={-1}
+          position="absolute"
+          top={0}
+          left={0}
+          opacity={0}
+          pointerEvents="none"
+        />
+
         <AuthModal
           isOpen={isAuthOpen}
           onClose={() => setIsAuthOpen(false)}
           view={authView}
           setView={setAuthView}
+          finalFocusRef={fallbackRef}
         />
 
         <Box pt={!isLoggedIn ? "72px" : undefined}>

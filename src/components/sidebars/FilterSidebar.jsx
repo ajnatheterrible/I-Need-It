@@ -26,10 +26,8 @@ export default function FilterSidebar({
   const [showDepartment, setShowDepartment] = useState(true);
   const [showCategory, setShowCategory] = useState(true);
   const [showSize, setShowSize] = useState(false);
-  const [showDesigner, setShowDesigner] = useState(false);
   const [showPrice, setShowPrice] = useState(false);
   const [showCondition, setShowCondition] = useState(false);
-  const [showLocation, setShowLocation] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
 
   const sizes = ["XXS", "XS", "S", "M", "L", "XL", "XXL"];
@@ -66,11 +64,12 @@ export default function FilterSidebar({
     }));
   };
 
-  const withTooltip = (element) => {
+  const withTooltip = (element, key) => {
     return query ? (
-      element
+      <Box key={key}>{element}</Box>
     ) : (
       <Tooltip
+        key={key}
         label="Enter a search term to use filters"
         hasArrow
         bg="gray.100"
@@ -165,7 +164,8 @@ export default function FilterSidebar({
                     isDisabled={!query}
                   >
                     {dept}
-                  </Checkbox>
+                  </Checkbox>,
+                  dept
                 )
               )}
             </VStack>
@@ -189,13 +189,13 @@ export default function FilterSidebar({
                 (cat) =>
                   withTooltip(
                     <Checkbox
-                      key={cat}
                       isChecked={(filters.category || []).includes(cat)}
                       onChange={() => handleCheckbox("category", cat)}
                       isDisabled={!query}
                     >
                       {cat}
-                    </Checkbox>
+                    </Checkbox>,
+                    cat
                   )
               )}
             </VStack>
@@ -218,13 +218,13 @@ export default function FilterSidebar({
               {sizes.map((size) =>
                 withTooltip(
                   <Checkbox
-                    key={size}
                     isChecked={(filters.size || []).includes(size)}
                     onChange={() => handleCheckbox("size", size)}
                     isDisabled={!query}
                   >
                     {size}
-                  </Checkbox>
+                  </Checkbox>,
+                  size
                 )
               )}
             </VStack>
@@ -247,13 +247,13 @@ export default function FilterSidebar({
               {conditions.map((label) =>
                 withTooltip(
                   <Checkbox
-                    key={label}
                     isChecked={(filters.condition || []).includes(label)}
                     onChange={() => handleCheckbox("condition", label)}
                     isDisabled={!query}
                   >
                     {label}
-                  </Checkbox>
+                  </Checkbox>,
+                  label
                 )
               )}
             </VStack>
@@ -272,9 +272,9 @@ export default function FilterSidebar({
             {showPrice ? <ChevronUpIcon /> : <ChevronDownIcon />}
           </HStack>
           <Collapse in={showPrice} animateOpacity>
-            {withTooltip(
-              <HStack mt={3} spacing={4}>
-                {["Min", "Max"].map((label, idx) => (
+            <VStack spacing={3} align="stretch" mt={3}>
+              {["Min", "Max"].map((label, idx) =>
+                withTooltip(
                   <HStack
                     key={label}
                     borderWidth="1px"
@@ -307,16 +307,17 @@ export default function FilterSidebar({
                       style={{
                         outline: "none",
                         border: "none",
-                        width: "60px",
+                        flex: 1,
                         fontSize: "0.875rem",
                         color: "#4A5568",
                         background: "transparent",
                       }}
                     />
-                  </HStack>
-                ))}
-              </HStack>
-            )}
+                  </HStack>,
+                  label
+                )
+              )}
+            </VStack>
             <Divider mt={3} />
           </Collapse>
         </Box>

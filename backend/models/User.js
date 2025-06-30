@@ -1,5 +1,5 @@
-const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
+import mongoose from "mongoose";
+import bcrypt from "bcrypt";
 
 const UserSchema = new mongoose.Schema(
   {
@@ -8,7 +8,7 @@ const UserSchema = new mongoose.Schema(
       trim: true,
       minlength: 3,
       maxlength: 30,
-      required: function () {
+      required() {
         return this.authProvider === "local";
       },
       unique: true,
@@ -19,6 +19,7 @@ const UserSchema = new mongoose.Schema(
       minlength: 3,
       maxlength: 30,
       unique: true,
+      lowercase: true,
     },
     email: {
       type: String,
@@ -30,7 +31,7 @@ const UserSchema = new mongoose.Schema(
     password: {
       type: String,
       minlength: 6,
-      required: function () {
+      required() {
         return this.authProvider === "local";
       },
     },
@@ -53,13 +54,6 @@ const UserSchema = new mongoose.Schema(
       maxlength: 500,
       default: "",
     },
-    listings: [{ type: mongoose.Schema.Types.ObjectId, ref: "Listing" }],
-    drafts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Listing" }],
-    purchases: [{ type: mongoose.Schema.Types.ObjectId, ref: "Listing" }],
-    soldItems: [{ type: mongoose.Schema.Types.ObjectId, ref: "Listing" }],
-    favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: "Listing" }],
-    reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: "Review" }],
-    messages: [{ type: mongoose.Schema.Types.ObjectId, ref: "Thread" }],
     isDemo: {
       type: Boolean,
       default: false,
@@ -98,6 +92,18 @@ const UserSchema = new mongoose.Schema(
         },
       },
     },
+    favorites: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Listing",
+      },
+    ],
+    blockedUsers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
     permissions: {
       type: String,
       enum: ["read-only", "full"],
@@ -105,7 +111,7 @@ const UserSchema = new mongoose.Schema(
     },
     signupIncompleteAt: {
       type: Date,
-      default: function () {
+      default() {
         return this.authProvider === "google" && !this.username
           ? new Date()
           : undefined;
@@ -118,6 +124,14 @@ const UserSchema = new mongoose.Schema(
     },
     resetPasswordExpires: {
       type: Date,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
     },
   },
   { timestamps: true }
@@ -144,4 +158,4 @@ UserSchema.methods.matchPassword = async function (enteredPassword) {
 };
 
 const User = mongoose.model("User", UserSchema);
-module.exports = User;
+export default User;

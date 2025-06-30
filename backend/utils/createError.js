@@ -4,4 +4,4 @@ const createError = (msg, statusCode = 500) => {
   return err;
 };
 
-module.exports = createError;
+export default createError;

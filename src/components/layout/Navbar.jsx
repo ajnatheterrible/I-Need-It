@@ -23,9 +23,8 @@ import { FaRegHeart, FaRegUser, FaRegCommentDots } from "react-icons/fa";
 import { useState, useRef, useEffect } from "react";
 import Container from "../shared/Container";
 import MenuDropdown from "../shared/MenuDropdown";
+import categoryMap from "../../data/categoryMap";
 import designers from "../../data/designers";
-import menswearItems from "../../data/menswearItems";
-import womenswearItems from "../../data/womenswearItems";
 import useAuthStore from "../../store/AuthStore";
 import { useNavigate } from "react-router-dom";
 
@@ -37,6 +36,20 @@ const navLinks = [
   { label: "EDITORIAL", path: "/editorial" },
   { label: "COLLECTIONS", path: "/collections" },
 ];
+
+const menswearItems = Object.entries(categoryMap["Menswear"]).map(
+  ([category, subcategories]) => ({
+    heading: category,
+    items: subcategories,
+  })
+);
+
+const womenswearItems = Object.entries(categoryMap["Womenswear"]).map(
+  ([category, subcategories]) => ({
+    heading: category,
+    items: subcategories,
+  })
+);
 
 export default function Navbar() {
   const [activeMenu, setActiveMenu] = useState(null);

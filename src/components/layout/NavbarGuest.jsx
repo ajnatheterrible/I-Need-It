@@ -88,14 +88,13 @@ export default function NavbarGuest() {
           <Button
             size="sm"
             variant="outline"
-            textTransform="uppercase"
             fontWeight="medium"
             minW="64px"
             h="40px"
             px="0"
             onClick={() => onOpenAuthModal("register")}
           >
-            Sell
+            SELL
           </Button>
 
           <HStack spacing={4}>

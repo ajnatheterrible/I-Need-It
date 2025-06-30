@@ -1,17 +1,20 @@
-const express = require("express");
-const router = express.Router();
-const {
+import express from "express";
+import {
   addFavorite,
   removeFavorite,
-  getUserById,
+  getUserFavorites,
   getUserSizes,
   updateUserSizes,
-} = require("../controllers/userController");
+} from "../controllers/userController.js";
 
-router.get("/:id", getUserById);
-router.post("/:id/favorites", addFavorite);
-router.delete("/:id/favorites/:listingId", removeFavorite);
-router.get("/:id/sizes", getUserSizes);
-router.put("/:id/sizes", updateUserSizes);
+import requireAuth from "../middleware/requireAuth.js";
 
-module.exports = router;
+const router = express.Router();
+
+router.get("/sizes", requireAuth, getUserSizes);
+router.put("/sizes", requireAuth, updateUserSizes);
+router.get("/favorites", requireAuth, getUserFavorites);
+router.post("/favorites/:listingId", requireAuth, addFavorite);
+router.delete("/favorites/:listingId", requireAuth, removeFavorite);
+
+export default router;
