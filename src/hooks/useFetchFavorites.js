@@ -1,14 +1,15 @@
 import { useEffect, useRef } from "react";
 import useAuthStore from "../store/authStore";
 
+export const hasFetchedFavoritesRef = { current: false };
+
 export default function useFetchFavorites() {
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
   const token = useAuthStore((s) => s.token);
-  const setUser = useAuthStore((s) => s.setUser);
-  const hasFetchedRef = useRef(false);
+  const setFetchedData = useAuthStore((s) => s.setFetchedData);
 
   useEffect(() => {
-    if (!isLoggedIn || !token || hasFetchedRef.current) return;
+    if (!isLoggedIn || !token || hasFetchedFavoritesRef.current) return;
 
     const fetchFavorites = async () => {
       try {
@@ -20,18 +21,21 @@ export default function useFetchFavorites() {
           },
         });
 
-        if (!res.ok) throw new Error("Failed to fetch user data");
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.message || "Failed to fetch favorites");
+        }
 
         const favorites = await res.json();
 
-        setUser({ favorites });
+        setFetchedData({ favorites });
 
-        hasFetchedRef.current = true;
+        hasFetchedFavoritesRef.current = true;
       } catch (err) {
         console.error("❌ Error fetching favorites:", err);
       }
     };
 
     fetchFavorites();
-  }, [isLoggedIn, token, setUser]);
+  }, [isLoggedIn, token]);
 }

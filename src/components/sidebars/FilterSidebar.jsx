@@ -13,7 +13,7 @@ import {
 import EditSizesModal from "../modals/EditSizesModal";
 import { ChevronUpIcon, ChevronDownIcon } from "@chakra-ui/icons";
 import { useState } from "react";
-import { useSearchParams, useOutletContext } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import useAuthStore from "../../store/authStore";
 import { useAuthModal } from "../../context/AuthModalContext";
 
@@ -22,6 +22,7 @@ export default function FilterSidebar({
   setFilters,
   isUsingMySizes,
   setIsUsingMySizes,
+  mode,
 }) {
   const [showDepartment, setShowDepartment] = useState(true);
   const [showCategory, setShowCategory] = useState(true);
@@ -65,7 +66,7 @@ export default function FilterSidebar({
   };
 
   const withTooltip = (element, key) => {
-    return query ? (
+    return query || mode !== "search" ? (
       <Box key={key}>{element}</Box>
     ) : (
       <Tooltip
@@ -124,7 +125,7 @@ export default function FilterSidebar({
                     ? setIsUsingMySizes((prev) => !prev)
                     : onOpenAuthModal("register")
                 }
-                isDisabled={!query}
+                isDisabled={!query && mode === "search"}
               />
             </HStack>
             <Text fontSize="sm" color="gray.600" mt={2}>
@@ -161,7 +162,7 @@ export default function FilterSidebar({
                     key={dept}
                     isChecked={(filters.department || []).includes(dept)}
                     onChange={() => handleCheckbox("department", dept)}
-                    isDisabled={!query}
+                    isDisabled={!query && mode === "search"}
                   >
                     {dept}
                   </Checkbox>,
@@ -191,7 +192,7 @@ export default function FilterSidebar({
                     <Checkbox
                       isChecked={(filters.category || []).includes(cat)}
                       onChange={() => handleCheckbox("category", cat)}
-                      isDisabled={!query}
+                      isDisabled={!query && mode === "search"}
                     >
                       {cat}
                     </Checkbox>,
@@ -220,7 +221,7 @@ export default function FilterSidebar({
                   <Checkbox
                     isChecked={(filters.size || []).includes(size)}
                     onChange={() => handleCheckbox("size", size)}
-                    isDisabled={!query}
+                    isDisabled={!query && mode === "search"}
                   >
                     {size}
                   </Checkbox>,
@@ -249,7 +250,7 @@ export default function FilterSidebar({
                   <Checkbox
                     isChecked={(filters.condition || []).includes(label)}
                     onChange={() => handleCheckbox("condition", label)}
-                    isDisabled={!query}
+                    isDisabled={!query && mode === "search"}
                   >
                     {label}
                   </Checkbox>,
@@ -303,7 +304,7 @@ export default function FilterSidebar({
                             : null,
                         }))
                       }
-                      disabled={!query}
+                      isDisabled={!query && mode === "search"}
                       style={{
                         outline: "none",
                         border: "none",

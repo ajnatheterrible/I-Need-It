@@ -1,4 +1,3 @@
-// src/components/Container.jsx
 import { Box } from "@chakra-ui/react";
 
 export default function Container({ children }) {

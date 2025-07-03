@@ -3,24 +3,21 @@ import {
   Text,
   Select,
   HStack,
-  SimpleGrid,
+  Grid,
   Image,
   Badge,
   Flex,
 } from "@chakra-ui/react";
-import { useState } from "react";
 import FilterSidebar from "../../components/sidebars/FilterSidebar";
 
-const listings = Array(12).fill({
-  id: 1,
-  brand: "THE VIRIDI-ANNE",
-  title: "Leather mask hooded jacket",
-  size: "M",
-  price: 1200,
-  timestamp: "about 5 hours ago",
-  freeShipping: true,
-  imageUrl: "/placeholder.jpg",
-});
+import { useState, useMemo } from "react";
+import { Link as RouterLink } from "react-router-dom";
+
+import useAuthStore from "../../store/authStore";
+import { hasFetchedForSaleRef } from "../../hooks/useFetchForSale";
+import useFetchForSale from "../../hooks/useFetchForSale";
+import useFetchSizes from "../../hooks/useFetchSizes";
+import getTimestamp from "../../utils/getTimestamp";
 
 export default function Profile() {
   const [filters, setFilters] = useState({
@@ -31,21 +28,83 @@ export default function Profile() {
     priceMin: null,
     priceMax: null,
   });
-
   const [isUsingMySizes, setIsUsingMySizes] = useState(false);
   const [sortOption, setSortOption] = useState("default");
 
-  const sortedListings = [...listings].sort((a, b) => {
-    if (sortOption === "price_low_high") return a.price - b.price;
-    if (sortOption === "price_high_low") return b.price - a.price;
-    return 0;
-  });
+  useFetchSizes();
+  useFetchForSale();
+
+  const sizes = useAuthStore((s) => s.fetchedData?.sizes);
+  const forSale = useAuthStore((s) => s.fetchedData?.forSale);
+
+  console.log("isUsingMySizes:", isUsingMySizes);
+  console.log("sizes:", sizes);
+
+  const filtered = useMemo(() => {
+    if (!Array.isArray(forSale)) return [];
+
+    const mySizeList =
+      isUsingMySizes && sizes
+        ? Object.values(sizes)
+            .map((catObj) => Object.values(catObj).flat())
+            .flat()
+        : filters.size;
+
+    console.log("mySizeList:", mySizeList);
+
+    return forSale.filter((listing) => {
+      if (mySizeList?.length && !mySizeList.includes(listing.size))
+        return false;
+      if (
+        filters.condition.length &&
+        !filters.condition.includes(listing.condition)
+      )
+        return false;
+      if (
+        filters.department.length &&
+        !filters.department.includes(listing.department)
+      )
+        return false;
+      if (
+        filters.category.length &&
+        !filters.category.includes(listing.category)
+      )
+        return false;
+      if (filters.priceMin !== null && listing.price < filters.priceMin)
+        return false;
+      if (filters.priceMax !== null && listing.price > filters.priceMax)
+        return false;
+      return true;
+    });
+  }, [forSale, filters, isUsingMySizes, sizes]);
+
+  const sortedListings = useMemo(() => {
+    const hasActiveFilters =
+      isUsingMySizes ||
+      Object.values(filters).some((val) =>
+        Array.isArray(val) ? val.length > 0 : Boolean(val)
+      );
+
+    const base = hasActiveFilters ? filtered : forSale ?? [];
+
+    return [...base].sort((a, b) => {
+      if (sortOption === "price_low_high") return a.price - b.price;
+      if (sortOption === "price_high_low") return b.price - a.price;
+      if (sortOption === "recent")
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      return 0;
+    });
+  }, [filtered, sortOption, forSale]);
+
+  if (!hasFetchedForSaleRef.current || !Array.isArray(forSale)) {
+    return null;
+  }
 
   return (
     <>
       <Box position="sticky" top="70px" bg="white" zIndex={10} py={6}>
         <Flex justify="space-between" align="center">
-          <Text fontWeight="semibold">{listings.length} listings</Text>
+          <Text fontWeight="semibold">{sortedListings.length} listings</Text>
           <Select
             size="sm"
             w="auto"
@@ -60,57 +119,70 @@ export default function Profile() {
         </Flex>
       </Box>
 
-      <HStack align="start" gap={6} pb={10}>
+      <Flex align="start" gap={6} mt={3}>
         <FilterSidebar
           filters={filters}
           setFilters={setFilters}
           isUsingMySizes={isUsingMySizes}
           setIsUsingMySizes={setIsUsingMySizes}
+          mode="profile"
         />
 
         <Box flex="1">
-          <SimpleGrid columns={4} spacing={6} w="full">
+          <Grid templateColumns="repeat(4, 1fr)" gap={6}>
             {sortedListings.map((item, i) => (
               <Box
-                key={i}
+                key={item._id}
                 borderWidth="1px"
                 borderRadius="md"
                 overflow="hidden"
               >
-                <Box position="relative" height="200px">
-                  <Image
-                    src={item.imageUrl}
-                    alt={item.title}
-                    height="100%"
-                    width="100%"
-                    objectFit="cover"
-                  />
-                  {item.freeShipping && (
-                    <Badge
-                      position="absolute"
-                      top="16px"
-                      left="8px"
-                      bg="#DCEF31"
-                      color="black"
-                      fontWeight="bold"
-                      fontSize="0.7em"
-                      px={2}
-                      py={1}
-                      borderRadius="sm"
-                    >
-                      FREE SHIPPING
-                    </Badge>
-                  )}
+                <Box
+                  as={RouterLink}
+                  to={`/listing/${item._id}`}
+                  _hover={{ textDecoration: "none" }}
+                >
+                  <Box position="relative" height="200px">
+                    <Image
+                      src={item.thumbnail}
+                      alt={item.title}
+                      height="100%"
+                      width="100%"
+                      objectFit="cover"
+                    />
+                    {item.isFreeShipping && (
+                      <Badge
+                        position="absolute"
+                        top="16px"
+                        left="8px"
+                        bg="#DCEF31"
+                        color="black"
+                        fontWeight="bold"
+                        fontSize="0.7em"
+                        px={2}
+                        py={1}
+                        borderRadius="sm"
+                      >
+                        FREE SHIPPING
+                      </Badge>
+                    )}
+                  </Box>
+                  <Box p={3} pt={3} pb={0}>
+                    <Text fontSize="xs" color="gray.500">
+                      {getTimestamp(item.createdAt)}
+                    </Text>
+                    <Box
+                      borderBottom="1px solid"
+                      borderColor="gray.200"
+                      my={2}
+                    />
+                  </Box>
                 </Box>
 
-                <Box p={3}>
-                  <Text fontSize="xs" color="gray.500">
-                    {item.timestamp}
-                  </Text>
-                  <Box borderBottom="1px solid" borderColor="gray.200" my={2} />
+                <Box px={3} pb={3}>
                   <HStack justify="space-between" mt={1}>
                     <Text fontWeight="bold" fontSize="sm" noOfLines={1}>
-                      {item.brand}
+                      {item.designer}
                     </Text>
                     <Text fontSize="xs" color="gray.600">
                       {item.size}
@@ -119,15 +191,15 @@ export default function Profile() {
                   <Text fontSize="xs" color="gray.600" noOfLines={1}>
                     {item.title}
                   </Text>
-                  <Text fontSize="sm" fontWeight="bold" mt={2}>
+                  <Text fontSize="sm" fontWeight="bold" mt={4}>
                     ${item.price.toLocaleString()}
                   </Text>
                 </Box>
               </Box>
             ))}
-          </SimpleGrid>
+          </Grid>
         </Box>
-      </HStack>
+      </Flex>
     </>
   );
 }

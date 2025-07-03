@@ -45,7 +45,6 @@ import { handleImageUpload } from "../utils/imageUtils";
 import { uploadListing, patchListing } from "../utils/uploadListingUtils";
 
 export default function Sell() {
-  const user = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.token);
   const navigate = useNavigate();
   const { draftId } = useParams();

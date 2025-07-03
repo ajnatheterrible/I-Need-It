@@ -11,7 +11,7 @@ export default function ForgotPassword() {
   const navigate = useNavigate();
   const token = searchParams.get("token");
 
-  const login = useAuthStore((state) => state.login);
+  const login = useAuthStore((s) => s.login);
 
   const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -116,11 +116,16 @@ export default function ForgotPassword() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+      if (!res.ok) {
+        console.log(data.message);
 
-      login(data.user, data.authToken);
+        throw new Error(data.message);
+      }
+
+      login(data.user, data.accessToken);
       setServerMessage(data.message);
     } catch (err) {
+      console.log(err);
       setError(err.message || "Something went wrong.");
     }
 

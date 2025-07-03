@@ -40,19 +40,23 @@ const SIZE_OPTIONS = {
 };
 
 export default function EditSizesModal({ isOpen, onClose }) {
-  const user = useAuthStore((s) => s.user);
+  const fetchedData = useAuthStore((s) => s.fetchedData);
   const token = useAuthStore((s) => s.token);
-  const setUser = useAuthStore((s) => s.setUser);
+  const setFetchedData = useAuthStore((s) => s.setFetchedData);
   const [activeTab, setActiveTab] = useState("menswear");
   const [sizes, setSizes] = useState({ menswear: {}, womenswear: {} });
   const [expanded, setExpanded] = useState({});
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
   useEffect(() => {
-    if (isOpen && user?.sizes && Object.keys(user.sizes).length > 0) {
-      setSizes(user.sizes);
+    if (
+      isOpen &&
+      fetchedData?.sizes &&
+      Object.keys(fetchedData.sizes).length > 0
+    ) {
+      setSizes(fetchedData.sizes);
     }
-  }, [isOpen, user]);
+  }, [isOpen, fetchedData]);
 
   const toggleSize = (department, category, size) => {
     setSizes((prev) => {
@@ -94,7 +98,7 @@ export default function EditSizesModal({ isOpen, onClose }) {
       const data = await res.json();
 
       if (res.ok) {
-        setUser({ sizes: data.sizes });
+        setFetchedData({ sizes: data.sizes });
         onClose();
       } else {
         console.error("Failed to save sizes:", data.message);

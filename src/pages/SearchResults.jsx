@@ -31,6 +31,7 @@ import useFetchListings from "../hooks/useFetchListings";
 import useSyncSearchParams from "../hooks/useSyncSearchParams";
 import useFetchFavorites from "../hooks/useFetchFavorites";
 import useFetchSizes from "../hooks/useFetchSizes";
+import { toggleFavorite } from "../utils/favoriteUtils";
 import useAuthStore from "../store/authStore";
 import { useAuthModal } from "../context/AuthModalContext";
 
@@ -40,12 +41,12 @@ export default function SearchResults() {
   const onOpenAuthModal = useAuthModal();
   const query = searchParams.get("query");
 
-  const user = useAuthStore((s) => s.user);
-  const userId = user?._id;
+  const userId = useAuthStore((s) => s.user._id);
   const token = useAuthStore((s) => s.token);
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
-  const sizes = useAuthStore((s) => s.user?.sizes);
-  const setUser = useAuthStore((s) => s.setUser);
+  const sizes = useAuthStore((s) => s.fetchedData?.sizes);
+  const fetchedData = useAuthStore((s) => s.fetchedData);
+  const setFetchedData = useAuthStore((s) => s.setFetchedData);
 
   useFetchFavorites();
   useFetchSizes();
@@ -66,13 +67,12 @@ export default function SearchResults() {
   });
   const [, forceUpdate] = useState(false);
 
-  const rawFavorites = useMemo(() => {
-    return Array.isArray(user?.favorites) ? user.favorites : [];
-  }, [user?.favorites]);
-
   const favoriteIds = useMemo(() => {
-    return rawFavorites.map((f) => (f && typeof f === "object" ? f._id : f));
-  }, [rawFavorites]);
+    const favorites = fetchedData?.favorites;
+    if (!Array.isArray(favorites)) return [];
+
+    return favorites.map((f) => (f && typeof f === "object" ? f._id : f));
+  }, [fetchedData?.favorites]);
 
   useSyncSearchParams(
     filters,
@@ -109,25 +109,11 @@ export default function SearchResults() {
     if (!isLoggedIn || !userId) return;
 
     const isAlreadyFavorited = favoriteIds.includes(listingId);
-    const method = isAlreadyFavorited ? "DELETE" : "POST";
 
     try {
-      const res = await fetch(
-        `http://localhost:5000/api/users/favorites/${listingId}`,
-        {
-          method,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const data = await toggleFavorite(listingId, token, isAlreadyFavorited);
 
-      const data = await res.json();
-      const updatedFavorites = data.favorites || [];
-
-      setUser({ favorites: [...updatedFavorites] });
-
+      setFetchedData({ favorites: [...data.favorites] });
       forceUpdate((prev) => !prev);
     } catch (err) {
       console.error("❌ Failed to toggle favorite", err);
@@ -178,7 +164,9 @@ export default function SearchResults() {
             isUsingMySizes={isUsingMySizes}
             setIsUsingMySizes={setIsUsingMySizes}
             query={query}
+            mode="search"
           />
+
           <Box flex="1">
             {isLoading ? (
               <SearchResultsSkeleton />
@@ -221,7 +209,7 @@ export default function SearchResults() {
                           </Badge>
                         )}
                       </Box>
-                      <Box p={3}>
+                      <Box p={3} pt={3} pb={0}>
                         <Text fontSize="xs" color="gray.500">
                           {getTimestamp(item.createdAt)}
                         </Text>
@@ -230,20 +218,21 @@ export default function SearchResults() {
                           borderColor="gray.200"
                           my={2}
                         />
-                        <HStack justify="space-between" mt={1}>
-                          <Text fontWeight="bold" fontSize="sm" noOfLines={1}>
-                            {item.designer}
-                          </Text>
-                          <Text fontSize="xs" color="gray.600">
-                            {item.size}
-                          </Text>
-                        </HStack>
-                        <Text fontSize="xs" color="gray.600" noOfLines={1}>
-                          {item.title}
-                        </Text>
                       </Box>
                     </Box>
+
                     <Box px={3} pb={3}>
+                      <HStack justify="space-between" mt={1}>
+                        <Text fontWeight="bold" fontSize="sm" noOfLines={1}>
+                          {item.designer}
+                        </Text>
+                        <Text fontSize="xs" color="gray.600">
+                          {item.size}
+                        </Text>
+                      </HStack>
+                      <Text fontSize="xs" color="gray.600" noOfLines={1}>
+                        {item.title}
+                      </Text>
                       <HStack justify="space-between" mt={2}>
                         <HStack spacing={2}>
                           {item.originalPrice && (
@@ -260,26 +249,28 @@ export default function SearchResults() {
                           </Text>
                         </HStack>
 
-                        <IconButton
-                          size="sm"
-                          icon={
-                            favoriteIds.includes(item._id) ? (
-                              <FaHeart color="black" />
-                            ) : (
-                              <FaRegHeart />
-                            )
-                          }
-                          aria-label={
-                            favoriteIds.includes(item._id)
-                              ? "Unfavorite"
-                              : "Favorite"
-                          }
-                          onClick={() =>
-                            isLoggedIn
-                              ? handleFavorite(item._id)
-                              : onOpenAuthModal("register")
-                          }
-                        />
+                        {userId !== item.seller && (
+                          <IconButton
+                            size="sm"
+                            icon={
+                              favoriteIds.includes(item._id) ? (
+                                <FaHeart color="black" />
+                              ) : (
+                                <FaRegHeart />
+                              )
+                            }
+                            aria-label={
+                              favoriteIds.includes(item._id)
+                                ? "Unfavorite"
+                                : "Favorite"
+                            }
+                            onClick={() =>
+                              isLoggedIn
+                                ? handleFavorite(item._id)
+                                : onOpenAuthModal("register")
+                            }
+                          />
+                        )}
                       </HStack>
                     </Box>
                   </Box>

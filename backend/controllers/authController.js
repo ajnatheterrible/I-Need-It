@@ -178,7 +178,6 @@ export const requestPasswordReset = asyncHandler(async (req, res) => {
 
   const resetURL = `http://localhost:5173/forgot-password?token=${rawToken}`;
   if (process.env.NODE_ENV !== "production") {
-    console.log(`🔐 Password reset link: ${resetURL}`);
   }
 
   const resend = new Resend(process.env.RESEND_API_KEY);
@@ -245,11 +244,12 @@ export const resetPassword = asyncHandler(async (req, res) => {
   user.resetPasswordExpires = undefined;
   await user.save();
 
-  const authToken = generateToken(user._id);
+  const accessToken = generateAccessToken(user._id);
+
   res.status(200).json({
     success: true,
     message: "Password has been reset successfully.",
     user,
-    authToken,
+    accessToken,
   });
 });

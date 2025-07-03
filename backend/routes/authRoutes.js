@@ -83,6 +83,6 @@ router.patch("/complete-signup", requireAuth, patchUser);
 // Password reset
 router.post("/request-password-reset", requestPasswordReset);
 router.post("/validate-reset-token", validateResetToken);
-router.post("/reset-password", limiter, resetPassword);
+router.post("/reset-password", resetPassword);
 
 export default router;

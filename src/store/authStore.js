@@ -5,12 +5,13 @@ const useAuthStore = create((set) => ({
   token: null,
   isLoggedIn: false,
   hasRefreshed: false,
+  fetchedData: {},
 
-  setUser: (newUserData) =>
+  setFetchedData: (newFetchedData) =>
     set((s) => ({
-      user: {
-        ...s.user,
-        ...newUserData,
+      fetchedData: {
+        ...s.fetchedData,
+        ...newFetchedData,
       },
     })),
 
@@ -37,6 +38,7 @@ const useAuthStore = create((set) => ({
       token: null,
       isLoggedIn: false,
       hasRefreshed: true,
+      fetchedData: {},
     });
   },
 
@@ -51,12 +53,13 @@ const useAuthStore = create((set) => ({
 
       if (!res.ok) throw new Error(data.message);
 
-      set({
+      set((s) => ({
         user: data.user,
         token: data.accessToken,
         isLoggedIn: true,
         hasRefreshed: true,
-      });
+        fetchedData: s.fetchedData,
+      }));
     } catch (err) {
       console.error("Could not refresh user:", err);
 
@@ -65,6 +68,7 @@ const useAuthStore = create((set) => ({
         token: null,
         isLoggedIn: false,
         hasRefreshed: true,
+        fetchedData: {},
       });
     }
   },

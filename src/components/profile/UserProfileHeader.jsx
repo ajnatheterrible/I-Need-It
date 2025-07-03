@@ -163,7 +163,7 @@ export default function UserProfileHeader() {
                       cursor="pointer"
                       _hover={{ color: "gray.600" }}
                     >
-                      Share on Twitter
+                      Share on X
                     </Text>
                     <Text
                       fontSize="xs"

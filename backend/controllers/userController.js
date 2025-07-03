@@ -1,4 +1,5 @@
 import User from "../models/User.js";
+import Listing from "../models/Listing.js";
 import asyncHandler from "../middleware/asyncHandler.js";
 import createError from "../utils/createError.js";
 
@@ -12,9 +13,23 @@ export const addFavorite = asyncHandler(async (req, res) => {
   const user = req.user;
   const { listingId } = req.params;
 
+  const listing = await Listing.findById(listingId);
+
+  if (!listing) {
+    return res.status(404).json({ message: "Listing not found" });
+  }
+
+  if (listing.seller.toString() === user._id.toString()) {
+    return res
+      .status(400)
+      .json({ message: "Cannot favorite your own listing" });
+  }
+
   if (!user.favorites.includes(listingId)) {
     user.favorites.push(listingId);
-    await user.save();
+    listing.favoritesCount += 1;
+
+    await Promise.all([user.save(), listing.save()]);
   }
 
   res.status(200).json({
@@ -27,8 +42,22 @@ export const removeFavorite = asyncHandler(async (req, res) => {
   const user = req.user;
   const { listingId } = req.params;
 
-  user.favorites = user.favorites.filter((fav) => fav.toString() !== listingId);
-  await user.save();
+  const listing = await Listing.findById(listingId);
+
+  if (!listing) {
+    return res.status(404).json({ message: "Listing not found" });
+  }
+
+  const wasFavorited = user.favorites.includes(listingId);
+
+  if (wasFavorited) {
+    user.favorites = user.favorites.filter(
+      (fav) => fav.toString() !== listingId
+    );
+    listing.favoritesCount = Math.max(0, listing.favoritesCount - 1);
+
+    await Promise.all([user.save(), listing.save()]);
+  }
 
   res.status(200).json({
     message: "Removed from favorites",
@@ -57,4 +86,14 @@ export const updateUserSizes = asyncHandler(async (req, res) => {
     message: "Sizes updated successfully",
     sizes: user.settings.sizes,
   });
+});
+
+export const getForSale = asyncHandler(async (req, res) => {
+  const user = req.user;
+  if (!user) throw createError("User not found", 404);
+
+  const listings = await Listing.find({ seller: user._id });
+  if (!listings.length) throw createError("No listings from this seller", 404);
+
+  res.status(200).json(listings);
 });

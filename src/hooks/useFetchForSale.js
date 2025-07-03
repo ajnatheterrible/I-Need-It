@@ -1,18 +1,19 @@
 import { useEffect, useRef } from "react";
 import useAuthStore from "../store/authStore";
 
-export default function useFetchSizes() {
+export const hasFetchedForSaleRef = { current: false };
+
+export default function useFetchForSale() {
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
   const token = useAuthStore((s) => s.token);
   const setFetchedData = useAuthStore((s) => s.setFetchedData);
-  const hasFetchedRef = useRef(false);
 
   useEffect(() => {
-    if (!isLoggedIn || !token || hasFetchedRef.current) return;
+    if (!isLoggedIn || !token || hasFetchedForSaleRef.current) return;
 
-    const fetchSizes = async () => {
+    const fetchForSale = async () => {
       try {
-        const res = await fetch(`/api/users/sizes`, {
+        const res = await fetch(`http://localhost:5000/api/users/for-sale`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -23,20 +24,21 @@ export default function useFetchSizes() {
         if (!res.ok) {
           const errorData = await res.json();
           throw new Error(
-            errorData.message || "Failed to fetch sizes for this user"
+            errorData.message ||
+              "Failed to fetch listings for sale from this seller"
           );
         }
 
-        const sizes = await res.json();
+        const listings = await res.json();
 
-        setFetchedData({ sizes });
+        setFetchedData({ forSale: listings });
 
-        hasFetchedRef.current = true;
+        hasFetchedForSaleRef.current = true;
       } catch (err) {
-        console.error("❌ Error fetching user sizes:", err);
+        console.error("❌ Error fetching listings for sale:", err);
       }
     };
 
-    fetchSizes();
+    fetchForSale();
   }, []);
 }

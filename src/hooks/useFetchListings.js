@@ -10,12 +10,18 @@ export default function useFetchListings(
   useEffect(() => {
     const fetchListings = async () => {
       setIsLoading(true);
+
       try {
         const url = query
           ? `http://localhost:5000/api/listings/feed?${searchParams.toString()}`
           : `http://localhost:5000/api/listings/random`;
 
         const res = await fetch(url);
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.message || "Failed to fetch listings");
+        }
+
         const data = await res.json();
 
         if (Array.isArray(data)) {
