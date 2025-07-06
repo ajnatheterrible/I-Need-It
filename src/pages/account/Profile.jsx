@@ -37,9 +37,6 @@ export default function Profile() {
   const sizes = useAuthStore((s) => s.fetchedData?.sizes);
   const forSale = useAuthStore((s) => s.fetchedData?.forSale);
 
-  console.log("isUsingMySizes:", isUsingMySizes);
-  console.log("sizes:", sizes);
-
   const filtered = useMemo(() => {
     if (!Array.isArray(forSale)) return [];
 
@@ -49,8 +46,6 @@ export default function Profile() {
             .map((catObj) => Object.values(catObj).flat())
             .flat()
         : filters.size;
-
-    console.log("mySizeList:", mySizeList);
 
     return forSale.filter((listing) => {
       if (mySizeList?.length && !mySizeList.includes(listing.size))
@@ -96,7 +91,11 @@ export default function Profile() {
     });
   }, [filtered, sortOption, forSale]);
 
-  if (!hasFetchedForSaleRef.current || !Array.isArray(forSale)) {
+  console.log("hasFetchedForSaleRef.current:", hasFetchedForSaleRef.current);
+  console.log("forSale:", forSale);
+  console.log("sortedListings:", sortedListings);
+
+  if (!hasFetchedForSaleRef.current) {
     return null;
   }
 
@@ -129,75 +128,83 @@ export default function Profile() {
         />
 
         <Box flex="1">
-          <Grid templateColumns="repeat(4, 1fr)" gap={6}>
-            {sortedListings.map((item, i) => (
-              <Box
-                key={item._id}
-                borderWidth="1px"
-                borderRadius="md"
-                overflow="hidden"
-              >
+          {sortedListings.length === 0 ? (
+            <Box py={20} textAlign="center" width="100%">
+              <Text fontSize="sm" color="gray.500">
+                You haven’t listed anything for sale yet
+              </Text>
+            </Box>
+          ) : (
+            <Grid templateColumns="repeat(4, 1fr)" gap={6}>
+              {sortedListings.map((item, i) => (
                 <Box
-                  as={RouterLink}
-                  to={`/listing/${item._id}`}
-                  _hover={{ textDecoration: "none" }}
+                  key={item._id}
+                  borderWidth="1px"
+                  borderRadius="md"
+                  overflow="hidden"
                 >
-                  <Box position="relative" height="200px">
-                    <Image
-                      src={item.thumbnail}
-                      alt={item.title}
-                      height="100%"
-                      width="100%"
-                      objectFit="cover"
-                    />
-                    {item.isFreeShipping && (
-                      <Badge
-                        position="absolute"
-                        top="16px"
-                        left="8px"
-                        bg="#DCEF31"
-                        color="black"
-                        fontWeight="bold"
-                        fontSize="0.7em"
-                        px={2}
-                        py={1}
-                        borderRadius="sm"
-                      >
-                        FREE SHIPPING
-                      </Badge>
-                    )}
+                  <Box
+                    as={RouterLink}
+                    to={`/listing/${item._id}`}
+                    _hover={{ textDecoration: "none" }}
+                  >
+                    <Box position="relative" height="200px">
+                      <Image
+                        src={item.thumbnail}
+                        alt={item.title}
+                        height="100%"
+                        width="100%"
+                        objectFit="cover"
+                      />
+                      {item.isFreeShipping && (
+                        <Badge
+                          position="absolute"
+                          top="16px"
+                          left="8px"
+                          bg="#DCEF31"
+                          color="black"
+                          fontWeight="bold"
+                          fontSize="0.7em"
+                          px={2}
+                          py={1}
+                          borderRadius="sm"
+                        >
+                          FREE SHIPPING
+                        </Badge>
+                      )}
+                    </Box>
+                    <Box p={3} pt={3} pb={0}>
+                      <Text fontSize="xs" color="gray.500">
+                        {getTimestamp(item.createdAt)}
+                      </Text>
+                      <Box
+                        borderBottom="1px solid"
+                        borderColor="gray.200"
+                        my={2}
+                      />
+                    </Box>
                   </Box>
-                  <Box p={3} pt={3} pb={0}>
-                    <Text fontSize="xs" color="gray.500">
-                      {getTimestamp(item.createdAt)}
-                    </Text>
-                    <Box
-                      borderBottom="1px solid"
-                      borderColor="gray.200"
-                      my={2}
-                    />
-                  </Box>
-                </Box>
 
-                <Box px={3} pb={3}>
-                  <HStack justify="space-between" mt={1}>
-                    <Text fontWeight="bold" fontSize="sm" noOfLines={1}>
-                      {item.designer}
+                  <Box px={3} pb={3}>
+                    <HStack justify="space-between" mt={1}>
+                      <Text fontWeight="bold" fontSize="sm" noOfLines={1}>
+                        {item.designer}
+                      </Text>
+                      <Text fontSize="xs" color="gray.600">
+                        {item.size}
+                      </Text>
+                    </HStack>
+                    <Text fontSize="xs" color="gray.600" noOfLines={1}>
+                      {item.title}
                     </Text>
-                    <Text fontSize="xs" color="gray.600">
-                      {item.size}
+                    <Text fontSize="sm" fontWeight="bold" mt={4}>
+                      ${item.price.toLocaleString()}
                     </Text>
-                  </HStack>
-                  <Text fontSize="xs" color="gray.600" noOfLines={1}>
-                    {item.title}
-                  </Text>
-                  <Text fontSize="sm" fontWeight="bold" mt={4}>
-                    ${item.price.toLocaleString()}
-                  </Text>
+                  </Box>
                 </Box>
-              </Box>
-            ))}
-          </Grid>
+              ))}
+            </Grid>
+          )}
         </Box>
       </Flex>
     </>

@@ -61,11 +61,11 @@ export default function UserFavorites() {
 
       <Box mt={3}>
         {sortedFavorites.length === 0 ? (
-          <Text textAlign="center" color="gray.500" mt={10}>
-            You haven’t favorited anything yet.
+          <Text fontSize="sm" textAlign="center" color="gray.500" mt={10}>
+            You haven’t favorited anything yet
           </Text>
         ) : (
-          <Grid templateColumns="repeat(4, 1fr)" gap={6}>
+          <Grid templateColumns="repeat(5, 1fr)" gap={6}>
             {sortedFavorites.map((item) => (
               <Box
                 key={item._id}

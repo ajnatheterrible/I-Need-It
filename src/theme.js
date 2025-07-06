@@ -3,7 +3,10 @@ import { extendTheme } from "@chakra-ui/react";
 const sharedDisabledStyle = {
   cursor: "default",
   opacity: 0.5,
-  color: "gray.700",
+  color: "gray.500",
+  _placeholder: {
+    color: "gray.500",
+  },
 };
 
 const theme = extendTheme({
@@ -16,6 +19,7 @@ const theme = extendTheme({
       },
     },
     Select: {
+      parts: ["field", "icon"],
       baseStyle: {
         field: {
           _disabled: sharedDisabledStyle,

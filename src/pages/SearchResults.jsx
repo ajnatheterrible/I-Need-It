@@ -15,7 +15,6 @@ import {
 } from "@chakra-ui/react";
 import { FaRegHeart, FaHeart } from "react-icons/fa";
 import {
-  Link as RouterLink,
   useSearchParams,
   useNavigate,
   useOutletContext,
@@ -123,26 +122,28 @@ export default function SearchResults() {
   return (
     <>
       <Container>
-        <Heading size="lg" mb={4} mt={4}>
+        <Heading size="lg" mb={4} mt={8}>
           {query}
         </Heading>
 
         <Box position="sticky" top="70px" bg="white" zIndex={10} py={3}>
           <Flex justify="space-between" align="center">
-            {query ? (
-              <HStack spacing={3}>
+            <HStack spacing={3}>
+              {query && (
                 <Text>
                   {count} {count === 1 ? "result" : "results"} for "{query}"
                 </Text>
+              )}
+
+              {Object.values(filters).some((val) =>
+                Array.isArray(val) ? val.length > 0 : val !== null
+              ) && (
                 <Button size="xs" variant="ghost" onClick={handleClearAll}>
                   Clear All
                 </Button>
-              </HStack>
-            ) : (
-              <Button size="xs" variant="ghost" onClick={handleClearAll}>
-                Clear All
-              </Button>
-            )}
+              )}
+            </HStack>
+
             <Select
               size="sm"
               w="auto"
@@ -180,8 +181,10 @@ export default function SearchResults() {
                     overflow="hidden"
                   >
                     <Box
-                      as={RouterLink}
-                      to={`/listing/${item._id}`}
+                      as="a"
+                      href={`/listing/${item._id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       _hover={{ textDecoration: "none" }}
                     >
                       <Box position="relative" height="200px">
@@ -223,10 +226,19 @@ export default function SearchResults() {
 
                     <Box px={3} pb={3}>
                       <HStack justify="space-between" mt={1}>
-                        <Text fontWeight="bold" fontSize="sm" noOfLines={1}>
+                        <Text
+                          fontWeight="bold"
+                          fontSize="sm"
+                          noOfLines={1}
+                          maxWidth="70%"
+                        >
                           {item.designer}
                         </Text>
-                        <Text fontSize="xs" color="gray.600">
+                        <Text
+                          fontSize="xs"
+                          color="gray.600"
+                          whiteSpace="nowrap"
+                        >
                           {item.size}
                         </Text>
                       </HStack>
@@ -239,7 +251,10 @@ export default function SearchResults() {
                             <Text
                               fontSize="sm"
                               color="gray.500"
-                              textDecoration="line-through"
+                              sx={{
+                                textDecoration: "line-through",
+                                textDecorationThickness: "2px",
+                              }}
                             >
                               ${item.originalPrice.toLocaleString()}
                             </Text>

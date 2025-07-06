@@ -152,7 +152,7 @@ export default function ForgotPassword() {
       borderRadius="lg"
       boxShadow="lg"
     >
-      <Heading mb={6} size="lg" textAlign="center">
+      <Heading mb={8} size="lg" textAlign="center">
         {token ? "Reset password" : "Forgot password?"}
       </Heading>
 

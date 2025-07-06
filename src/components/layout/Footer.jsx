@@ -46,27 +46,27 @@ export default function Footer() {
         <HStack spacing={0}>
           <IconButton
             as="a"
-            href="#"
             icon={<FaInstagram />}
             aria-label="Instagram"
             variant="ghost"
             size="md"
+            cursor="pointer"
           />
           <IconButton
             as="a"
-            href="#"
             icon={<FaYoutube />}
             aria-label="YouTube"
             variant="ghost"
             size="md"
+            cursor="pointer"
           />
           <IconButton
             as="a"
-            href="#"
             icon={<FaFacebook />}
             aria-label="Facebook"
             variant="ghost"
             size="md"
+            cursor="pointer"
           />
           <Text fontSize="xs" fontWeight="medium" letterSpacing="wide" ml={6}>
             I Need It © 2025

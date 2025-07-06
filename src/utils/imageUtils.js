@@ -37,3 +37,29 @@ export const uploadImageToCloudinary = async (file) => {
   const data = await res.json();
   return data.url;
 };
+
+export const handleMultipleUploads = async (
+  fileList,
+  clickedIndex,
+  setUploadedImageUrls,
+  setUploadingIndex
+) => {
+  const files = Array.from(fileList);
+
+  const emptyIndexes = uploadedImageUrls
+    .map((url, i) => (url === null ? i : null))
+    .filter((i) => i !== null && i >= clickedIndex);
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const targetIndex = emptyIndexes[i];
+    if (targetIndex === undefined) break;
+
+    await handleImageUpload(
+      file,
+      targetIndex,
+      setUploadedImageUrls,
+      setUploadingIndex
+    );
+  }
+};

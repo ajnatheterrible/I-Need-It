@@ -5,30 +5,32 @@ import {
   HStack,
   SimpleGrid,
   Input,
-  Select,
   Textarea,
   FormControl,
   FormLabel,
+  FormErrorMessage,
   Button,
   Icon,
   Grid,
   GridItem,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
   Alert,
   AlertIcon,
 } from "@chakra-ui/react";
 import { FaCamera } from "react-icons/fa";
 import { PuffLoader } from "react-spinners";
+import { AnimatePresence, motion } from "framer-motion";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import useAuthStore from "../store/authStore";
 
 import Container from "../components/shared/Container";
 import TagInput from "../components/ui/tagInput";
+import CustomSelect from "../components/ui/CustomSelect";
+import GroupedSelect from "../components/ui/GroupedSelect";
+import ShippingSection from "../components/ui/ShippingSection";
+import DeleteDraftDialog from "../components/ui/DeleteDraftDialog";
+
 import designers from "../data/designers";
 import categoryMap from "../data/categoryMap";
 import {
@@ -48,6 +50,38 @@ export default function Sell() {
   const token = useAuthStore((s) => s.token);
   const navigate = useNavigate();
   const { draftId } = useParams();
+  const inputRef = useRef(null);
+  const didScrollOnValidation = useRef(false);
+
+  const [selectedRegions, setSelectedRegions] = useState([]);
+  const [shippingCosts, setShippingCosts] = useState({});
+
+  const toggleRegion = (region) => {
+    if (selectedRegions.includes(region)) {
+      setSelectedRegions((prev) => prev.filter((r) => r !== region));
+      setShippingCosts((prev) => {
+        const updated = { ...prev };
+        delete updated[region];
+        return updated;
+      });
+    } else {
+      setSelectedRegions((prev) => [...prev, region]);
+    }
+  };
+
+  const handleShippingCostChange = (region, value) => {
+    setShippingCosts((prev) => ({
+      ...prev,
+      [region]: value,
+    }));
+  };
+
+  const address = {
+    name: "Joey Pereira",
+    street: "2445 NW 158th St",
+    cityStateZip: "Opa Locka, FL 33054",
+    country: "United States",
+  };
 
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -83,12 +117,6 @@ export default function Sell() {
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [missingItemName, setMissingItemName] = useState(false);
   const [isDraftEdit, setIsDraftEdit] = useState(false);
-
-  const errorStyle = {
-    borderWidth: "2px",
-    borderColor: "red.500",
-    borderStyle: "solid",
-  };
 
   const availableSubcategories =
     selectedDepartment && selectedCategory
@@ -153,6 +181,10 @@ export default function Sell() {
     const hasNoImages = uploadedImageUrls.filter(Boolean).length === 0;
 
     if (hasMissingFields || hasNoImages) {
+      if (!didScrollOnValidation.current) {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        didScrollOnValidation.current = true;
+      }
       return;
     }
 
@@ -209,6 +241,10 @@ export default function Sell() {
 
     if (!itemName) {
       setMissingItemName(true);
+      if (!didScrollOnValidation.current) {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        didScrollOnValidation.current = true;
+      }
       return;
     }
 
@@ -282,6 +318,35 @@ export default function Sell() {
     fetchDraft();
   }, [draftId]);
 
+  const handleDeleteDraft = async () => {
+    if (!draftId) return;
+
+    try {
+      setIsSubmitting(true);
+
+      const res = await fetch(`/api/market/delete-draft`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ draftId }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+
+        throw new Error(data.message);
+      }
+
+      navigate("/drafts");
+    } catch (err) {
+      setIsSubmitting(false);
+      console.error("Error deleting draft:", err);
+      alert("Something went wrong. Please try again.");
+    }
+  };
+
   return (
     <Container>
       <Box maxW="960px" mx="auto" py={10}>
@@ -300,143 +365,129 @@ export default function Sell() {
           </Heading>
           <SimpleGrid columns={8} spacing={4}>
             <Grid gridColumn="span 4">
-              <FormControl
-                id="department-category"
+              <GroupedSelect
+                placeholder="Department / Category"
+                value={
+                  selectedDepartment && selectedCategory
+                    ? `${selectedDepartment}-${selectedCategory}`
+                    : ""
+                }
+                onChange={handleCategorySelect}
                 isInvalid={hasSubmitted && !selectedDepartment}
-              >
-                <Select
-                  placeholder="Department / Category"
-                  value={
-                    selectedDepartment && selectedCategory
-                      ? `${selectedDepartment}-${selectedCategory}`
-                      : ""
-                  }
-                  onChange={(e) => handleCategorySelect(e.target.value)}
-                  sx={{
-                    option: { backgroundColor: "white", fontStyle: "normal" },
-                  }}
-                >
-                  {Object.entries(categoryMap).map(([dept, categories]) => (
-                    <optgroup
-                      key={dept}
-                      label={dept}
-                      style={{ fontStyle: "normal" }}
-                    >
-                      {Object.keys(categories).map((cat) => (
-                        <option key={`${dept}-${cat}`} value={`${dept}-${cat}`}>
-                          {cat}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </Select>
-              </FormControl>
+                options={Object.entries(categoryMap).flatMap(
+                  ([dept, categories]) => [
+                    { isGroupLabel: true, label: dept },
+                    ...Object.keys(categories).map((cat) => ({
+                      label: cat,
+                      value: `${dept}-${cat}`,
+                    })),
+                  ]
+                )}
+              />
             </Grid>
 
             <Grid gridColumn="span 4">
-              <FormControl
-                id="subcategory"
-                isInvalid={hasSubmitted && !selectedSubcategory}
-              >
-                <Select
-                  placeholder="Sub-category (select category first)"
-                  value={selectedSubcategory}
-                  onChange={(e) => setSelectedSubcategory(e.target.value)}
-                  isDisabled={!selectedCategory}
-                >
-                  {availableSubcategories.map((sub) => (
-                    <option key={sub} value={sub}>
-                      {sub}
-                    </option>
-                  ))}
-                </Select>
-              </FormControl>
+              <CustomSelect
+                id="sub-category"
+                placeholder="Sub-category (select category first)"
+                options={availableSubcategories}
+                value={selectedSubcategory}
+                onChange={setSelectedSubcategory}
+                error={hasSubmitted && !selectedSubcategory}
+                isDisabled={!selectedCategory}
+              />
             </Grid>
 
-            <Grid gridColumn="span 4" position="relative">
+            <Grid gridColumn="span 4">
               <FormControl
                 id="designer"
                 isInvalid={hasSubmitted && !selectedDesigner}
               >
-                <Input
-                  placeholder="Designer (select category first)"
-                  value={selectedDesigner}
-                  onFocus={() => {
-                    if (designers.length > 0) setShowDesignerDropdown(true);
-                  }}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setDesignerInput(value);
-                    setSelectedDesigner(null);
-                    setShowDesignerDropdown(true);
-                  }}
-                  onBlur={() => {
-                    setTimeout(() => setShowDesignerDropdown(false), 100);
-                    const isValid = designers.some(
-                      (d) =>
-                        d.toLowerCase() === designerInput.trim().toLowerCase()
-                    );
-                    if (!isValid) setDesignerInput("");
-                  }}
-                  isDisabled={!selectedCategory}
-                />
-                {(designerInput || showDesignerDropdown) &&
-                  !selectedDesigner &&
-                  filteredDesigners.length > 0 && (
-                    <Box
-                      position="absolute"
-                      top="100%"
-                      left={0}
-                      right={0}
-                      bg="white"
-                      border="1px solid #E2E8F0"
-                      mt={1}
-                      zIndex={10}
-                      maxH="200px"
-                      overflowY="auto"
-                      borderRadius="md"
-                      boxShadow="md"
-                    >
-                      {filteredDesigners.map((name) => (
-                        <Box
-                          key={name}
-                          px={4}
-                          py={2}
-                          _hover={{ bg: "gray.100", cursor: "pointer" }}
-                          onMouseDown={() => {
-                            setDesignerInput(name);
-                            setSelectedDesigner(name);
+                <Box position="relative">
+                  <Input
+                    placeholder="Designer (select category first)"
+                    value={designerInput}
+                    onFocus={() => {
+                      if (designers.length > 0) setShowDesignerDropdown(true);
+                    }}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setDesignerInput(value);
+                      setSelectedDesigner(null);
+                      setShowDesignerDropdown(true);
+                    }}
+                    onBlur={() => {
+                      setTimeout(() => setShowDesignerDropdown(false), 100);
+                      const isValid = designers.some(
+                        (d) =>
+                          d.toLowerCase() === designerInput.trim().toLowerCase()
+                      );
+                      if (!isValid) setDesignerInput("");
+                    }}
+                    isDisabled={!selectedCategory}
+                    pr="2.5rem"
+                    bg="white"
+                    borderRadius="md"
+                  />
+
+                  <AnimatePresence>
+                    {(designerInput || showDesignerDropdown) &&
+                      !selectedDesigner &&
+                      filteredDesigners.length > 0 && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          transition={{ duration: 0.15, ease: "easeOut" }}
+                          style={{
+                            position: "absolute",
+                            top: "100%",
+                            left: 0,
+                            right: 0,
+                            zIndex: 10,
                           }}
                         >
-                          {name}
-                        </Box>
-                      ))}
-                    </Box>
-                  )}
+                          <Box
+                            bg="white"
+                            border="1px solid #E2E8F0"
+                            mt={2}
+                            maxH="200px"
+                            overflowY="auto"
+                            borderRadius="md"
+                            boxShadow="md"
+                          >
+                            {filteredDesigners.map((name) => (
+                              <Box
+                                key={name}
+                                px={4}
+                                py={2}
+                                _hover={{ bg: "gray.100", cursor: "pointer" }}
+                                onMouseDown={() => {
+                                  setDesignerInput(name);
+                                  setSelectedDesigner(name);
+                                }}
+                              >
+                                {name}
+                              </Box>
+                            ))}
+                          </Box>
+                        </motion.div>
+                      )}
+                  </AnimatePresence>
+                </Box>
               </FormControl>
             </Grid>
 
             <Grid gridColumn="span 4">
-              <FormControl id="size" isInvalid={hasSubmitted && !selectedSize}>
-                <Select
-                  placeholder="Size (select category first)"
-                  onChange={(e) => setSelectedSize(e.target.value)}
-                  isDisabled={!isSizeCategory}
-                  value={selectedSize}
-                >
-                  {isOneSizeCategory
-                    ? ["One Size"].map((size) => (
-                        <option key={size} value={size}>
-                          {size}
-                        </option>
-                      ))
-                    : sizeOptions.map((size) => (
-                        <option key={size} value={size}>
-                          {size}
-                        </option>
-                      ))}
-                </Select>
-              </FormControl>
+              <CustomSelect
+                id="size"
+                placeholder="Size (select category first)"
+                options={isOneSizeCategory ? ["One Size"] : sizeOptions}
+                value={selectedSize}
+                onChange={setSelectedSize}
+                error={hasSubmitted && !selectedSize}
+                isDisabled={!isSizeCategory}
+              />
             </Grid>
           </SimpleGrid>
         </Box>
@@ -444,9 +495,7 @@ export default function Sell() {
         <Box mb={16}>
           <FormControl
             id="item-name"
-            isInvalid={
-              (hasSubmitted && !itemName) || (missingItemName && !itemName)
-            }
+            isInvalid={(hasSubmitted && !itemName) || missingItemName}
           >
             <FormLabel fontSize="20px" fontWeight="bold" mb={4}>
               Item name
@@ -457,8 +506,11 @@ export default function Sell() {
                   placeholder="Item name"
                   value={itemName}
                   onChange={(e) => {
+                    setMissingItemName(false);
+
                     const raw = e.target.value;
                     const cleaned = raw.replace(/[^a-zA-Z0-9' ]/g, "");
+
                     setItemName(cleaned);
                   }}
                 />
@@ -467,92 +519,36 @@ export default function Sell() {
           </FormControl>
         </Box>
 
-        <Box mb={16}>
-          <FormControl id="color" isInvalid={hasSubmitted && !selectedColor}>
-            <FormLabel fontSize="20px" fontWeight="bold" mb={4}>
-              Color
-            </FormLabel>
-            <SimpleGrid columns={8} spacing={4}>
-              <Grid gridColumn="span 4">
-                <Menu matchWidth>
-                  <MenuButton
-                    as={Button}
-                    w="100%"
-                    textAlign="left"
-                    variant="outline"
-                    bg="white"
-                    fontWeight="normal"
-                    _hover={{ bg: "gray.50" }}
-                    _expanded={{ bg: "gray.100" }}
-                    _focus={{ boxShadow: "outline" }}
-                    {...(hasSubmitted && !selectedColor
-                      ? errorStyle
-                      : { border: "1px solid", borderColor: "gray.200" })}
-                  >
-                    {selectedColor ? (
-                      <HStack spacing={3}>
-                        <Box
-                          w="14px"
-                          h="14px"
-                          borderRadius="full"
-                          bg={selectedColor.hex}
-                        />
-                        <Text>{selectedColor.name}</Text>
-                      </HStack>
-                    ) : (
-                      <Text color="gray.500">Select a color</Text>
-                    )}
-                  </MenuButton>
-                  <MenuList maxH="200px" overflowY="auto" zIndex={20}>
-                    {colors.map((color) => (
-                      <MenuItem
-                        key={color.name}
-                        onClick={() => setSelectedColor(color)}
-                        _hover={{ bg: "gray.100" }}
-                      >
-                        <HStack spacing={3}>
-                          <Box
-                            w="14px"
-                            h="14px"
-                            borderRadius="full"
-                            bg={color.hex}
-                          />
-                          <Text>{color.name}</Text>
-                        </HStack>
-                      </MenuItem>
-                    ))}
-                  </MenuList>
-                </Menu>
-              </Grid>
-            </SimpleGrid>
-          </FormControl>
-        </Box>
+        <SimpleGrid columns={8} spacing={4} mb={16}>
+          <Grid gridColumn="span 4">
+            <CustomSelect
+              id="color"
+              label="Color"
+              placeholder="Select a color"
+              options={colors}
+              value={selectedColor}
+              onChange={setSelectedColor}
+              error={hasSubmitted && !selectedColor}
+              colorIndicator={(option) => (
+                <Box w="14px" h="14px" borderRadius="full" bg={option.hex} />
+              )}
+            />
+          </Grid>
+        </SimpleGrid>
 
-        <Box mb={16}>
-          <FormControl
-            id="condition"
-            isInvalid={hasSubmitted && !selectedCondition}
-          >
-            <FormLabel fontSize="20px" fontWeight="bold" mb={4}>
-              Condition
-            </FormLabel>
-            <SimpleGrid columns={8} spacing={4}>
-              <Grid gridColumn="span 4">
-                <Select
-                  placeholder="Select a condition"
-                  value={selectedCondition}
-                  onChange={(e) => setSelectedCondition(e.target.value)}
-                >
-                  {conditions.map((condition) => (
-                    <option key={condition} value={condition}>
-                      {condition}
-                    </option>
-                  ))}
-                </Select>
-              </Grid>
-            </SimpleGrid>
-          </FormControl>
-        </Box>
+        <SimpleGrid columns={8} spacing={4} mb={16}>
+          <Grid gridColumn="span 4">
+            <CustomSelect
+              id="condition"
+              label="Condition"
+              placeholder="Select a condition"
+              options={conditions}
+              value={selectedCondition}
+              onChange={setSelectedCondition}
+              error={hasSubmitted && !selectedCondition}
+            />
+          </Grid>
+        </SimpleGrid>
 
         <Box mb={16}>
           <FormControl id="description">
@@ -566,6 +562,7 @@ export default function Sell() {
                 setDescription(value);
               }}
               value={description}
+              py={4}
             />
           </FormControl>
         </Box>
@@ -574,77 +571,97 @@ export default function Sell() {
           <TagInput tags={tags} setTags={setTags} />
         </Box>
 
-        <Box mb={16} position="relative">
-          <FormControl
-            id="country-of-origin"
-            isInvalid={hasSubmitted && !countryOfOrigin}
-          >
-            <FormLabel fontSize="20px" fontWeight="bold" mb={1}>
-              Where was your item made?
-            </FormLabel>
-            <Text fontSize="sm" color="gray.500" mb={4}>
-              Provide the{" "}
-              <Text as="span" fontWeight="bold">
-                country of origin for this product
-              </Text>{" "}
-              for customs
-            </Text>
+        <SimpleGrid columns={8} spacing={4} mb={16}>
+          <Grid gridColumn="span 4">
+            <FormControl
+              id="country-of-origin"
+              isInvalid={hasSubmitted && !countryOfOrigin}
+            >
+              <FormLabel fontSize="20px" fontWeight="bold">
+                Where was your item made?
+              </FormLabel>
+              <Text fontSize="sm" color="gray.500" mb={4}>
+                Provide the{" "}
+                <Text as="span" fontWeight="bold">
+                  country of origin for this product
+                </Text>{" "}
+                for customs
+              </Text>
 
-            <Input
-              placeholder="Country name"
-              value={countryOfOrigin}
-              onChange={(e) => {
-                setCountryInput(e.target.value);
-                setShowCountryDropdown(true);
-              }}
-              onFocus={() => setShowCountryDropdown(true)}
-              onBlur={() =>
-                setTimeout(() => setShowCountryDropdown(false), 100)
-              }
-              w="50%"
-              borderWidth={hasSubmitted && !countryOfOrigin ? "2px" : "1px"}
-              borderColor={
-                hasSubmitted && !countryOfOrigin ? "red.500" : "gray.200"
-              }
-            />
+              <Input
+                ref={inputRef}
+                placeholder="Country name"
+                value={countryInput}
+                onChange={(e) => {
+                  setCountryInput(e.target.value);
+                  setShowCountryDropdown(true);
+                }}
+                onFocus={() => setShowCountryDropdown(true)}
+                onBlur={() =>
+                  setTimeout(() => {
+                    setShowCountryDropdown(false);
 
-            {showCountryDropdown && (
-              <Box
-                position="absolute"
-                width="50%"
-                bg="white"
-                border="1px solid #E2E8F0"
-                mt={1}
-                zIndex={20}
-                maxH="200px"
-                overflowY="auto"
-                borderRadius="md"
-                boxShadow="md"
-              >
-                {filteredCountries.map((c) => (
-                  <Box
-                    key={c}
-                    px={4}
-                    py={2}
-                    _hover={{ bg: "gray.100", cursor: "pointer" }}
-                    onMouseDown={() => {
-                      setCountryInput(c);
-                      setCountryOfOrigin(c);
-                      setShowCountryDropdown(false);
+                    if (!filteredCountries.includes(countryInput)) {
+                      setCountryInput("");
+                      setCountryOfOrigin("");
+                    }
+                  }, 100)
+                }
+                borderWidth="1px"
+                borderColor={
+                  hasSubmitted && !countryOfOrigin ? "red.500" : "gray.200"
+                }
+              />
+
+              <AnimatePresence>
+                {showCountryDropdown && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.15, ease: "easeOut" }}
+                    style={{
+                      position: "absolute",
+                      width: inputRef.current?.offsetWidth ?? "100%",
+                      zIndex: 20,
                     }}
                   >
-                    {c}
-                  </Box>
-                ))}
-              </Box>
-            )}
-          </FormControl>
-        </Box>
+                    <Box
+                      bg="white"
+                      border="1px solid #E2E8F0"
+                      mt={2}
+                      maxH="200px"
+                      overflowY="auto"
+                      borderRadius="md"
+                      boxShadow="md"
+                    >
+                      {filteredCountries.map((c) => (
+                        <Box
+                          key={c}
+                          px={4}
+                          py={2}
+                          _hover={{ bg: "gray.100", cursor: "pointer" }}
+                          onMouseDown={() => {
+                            setCountryInput(c);
+                            setCountryOfOrigin(c);
+                            setShowCountryDropdown(false);
+                          }}
+                        >
+                          {c}
+                        </Box>
+                      ))}
+                    </Box>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </FormControl>
+          </Grid>
+        </SimpleGrid>
 
         <Box mb={8}>
           <FormControl
             id="price"
-            isInvalid={isPriceInvalid && hasSubmitted && !priceInput}
+            isInvalid={(hasSubmitted && !priceInput) || isPriceInvalid}
           >
             <FormLabel fontSize="20px" fontWeight="bold" mb={4}>
               Price
@@ -656,6 +673,10 @@ export default function Sell() {
                   value={priceInput}
                   onChange={handlePriceChange}
                   onBlur={() => {
+                    if (!priceInput) {
+                      return;
+                    }
+
                     const clean = parseFloat(
                       priceInput.replace(/[^0-9.]/g, "")
                     );
@@ -663,25 +684,25 @@ export default function Sell() {
                       setPriceInput("");
                       setIsPriceInvalid(true);
                       setPriceError("Price must be between $1 and $200,000");
+                    } else {
+                      setIsPriceInvalid(false);
+                      setPriceError("");
                     }
                   }}
                   textAlign="left"
                   fontWeight="semibold"
                   color={isPriceInvalid ? "red.500" : "gray.800"}
-                  borderColor={isPriceInvalid ? "red.500" : "gray.200"}
-                  {...(hasSubmitted && !priceInput
-                    ? errorStyle
-                    : { borderColor: "gray.200" })}
                   _placeholder={{
-                    color: isPriceInvalid ? "red.300" : "gray.400",
+                    color: isPriceInvalid ? "red.300" : "gray.500",
+                    fontWeight: isPriceInvalid ? "semibold" : "normal",
                   }}
                 />
               </Grid>
             </SimpleGrid>
             {priceError && (
-              <Text fontSize="xs" mt={2} color={"red.500"} fontWeight={"bold"}>
+              <FormErrorMessage fontWeight="bold" fontSize="xs">
                 {priceError}
-              </Text>
+              </FormErrorMessage>
             )}
           </FormControl>
         </Box>
@@ -733,6 +754,14 @@ export default function Sell() {
             </Box>
           </FormControl>
         </Box>
+
+        <ShippingSection
+          address={address}
+          selectedRegions={selectedRegions}
+          shippingCosts={shippingCosts}
+          toggleRegion={toggleRegion}
+          handleShippingCostChange={handleShippingCostChange}
+        />
 
         <Box mb={16}>
           <Heading fontSize="20px" fontWeight="bold" mb={4}>
@@ -850,33 +879,45 @@ export default function Sell() {
           borderColor="gray.200"
           py={4}
         >
-          <Box maxW="960px" mx="auto" px={4}>
+          <Box maxW="960px" mx="auto">
             <SimpleGrid columns={8} spacing={4}>
               <Grid gridColumn="span 8">
-                <HStack justify="flex-end" spacing={4}>
-                  <Button
-                    variant="outline"
-                    colorScheme="gray"
-                    onClick={handleSaveDraft}
-                    isDisabled={isSubmitting}
-                  >
-                    Save as Draft
-                  </Button>
-                  <Button
-                    bg="#DCEF31"
-                    color="black"
-                    _hover={{ bg: "#C5E426" }}
-                    onClick={handleSubmit}
-                    isDisabled={isSubmitting}
-                  >
-                    Publish
-                  </Button>
+                <HStack
+                  justify={draftId ? "space-between" : "flex-end"}
+                  spacing={4}
+                >
+                  {draftId && (
+                    <DeleteDraftDialog
+                      onConfirm={handleDeleteDraft}
+                      isSubmitting={isSubmitting}
+                    />
+                  )}
+                  <HStack spacing={4}>
+                    <Button
+                      variant="outline"
+                      colorScheme="gray"
+                      onClick={handleSaveDraft}
+                      isDisabled={isSubmitting}
+                    >
+                      {draftId ? "Save Changes" : "Save as Draft"}
+                    </Button>
+                    <Button
+                      bg="#DCEF31"
+                      color="black"
+                      _hover={{ bg: "#C5E426" }}
+                      onClick={handleSubmit}
+                      isDisabled={isSubmitting}
+                    >
+                      Publish
+                    </Button>
+                  </HStack>
                 </HStack>
               </Grid>
             </SimpleGrid>
           </Box>
         </Box>
       </Box>
+
       {isSubmitting && (
         <Box
           position="fixed"

@@ -29,21 +29,22 @@ const dummyReviews = [
 ];
 
 const UserReviews = () => {
-  const hasReviews = dummyReviews.length > 0;
+  const hasFetchedReviews = true; // ✅ mock this as true if you're simulating fetch
+  const hasReviews = Array.isArray(dummyReviews) && dummyReviews.length > 0;
 
   return (
     <Container>
       <Flex justify="center">
         <VStack spacing={6} align="stretch" py={10}>
-          {hasReviews ? (
+          {hasFetchedReviews && hasReviews ? (
             dummyReviews.map((review) => (
               <ReviewCard key={review.id} review={review} />
             ))
-          ) : (
+          ) : hasFetchedReviews && !hasReviews ? (
             <Text fontSize="sm" color="gray.500">
-              No reviews yet.
+              No reviews yet
             </Text>
-          )}
+          ) : null}
         </VStack>
       </Flex>
     </Container>

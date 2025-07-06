@@ -44,8 +44,13 @@ export const getFeedListings = asyncHandler(async (req, res) => {
 });
 
 export const getListingById = asyncHandler(async (req, res) => {
-  const listing = await Listing.findById(req.params.id);
+  const listing = await Listing.findById(req.params.id).populate(
+    "seller",
+    "username"
+  );
+
   if (!listing) throw createError("Listing not found", 404);
+
   res.json(listing);
 });
 

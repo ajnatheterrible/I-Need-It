@@ -12,18 +12,30 @@ import {
   useDisclosure,
   Avatar,
   Img,
+  Flex,
 } from "@chakra-ui/react";
+import { WarningIcon } from "@chakra-ui/icons";
+
 import { useEffect, useState } from "react";
 import { Link as RouterLink, useParams, useNavigate } from "react-router-dom";
+
 import Container from "../components/shared/Container";
 import Footer from "../components/layout/Footer";
+import { PurchaseProtection } from "../components/ui/PurchaseProtection";
+import KlarnaAffirmButton from "../components/ui/KlarnaAffirmButton";
+import KlarnaAffirmModal from "../components/ui/KlarnaAffirmModal";
 import OfferModal from "../components/modals/OfferModal";
 import MessageModal from "../components/modals/MessageModal";
 import ListingSkeleton from "../components/skeletons/ListingSkeleton";
 
+import useAuthStore from "../store/authStore";
+
 export default function ListingPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+
+  const user = useAuthStore((s) => s.user);
+
   const [listing, setListing] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -36,6 +48,7 @@ export default function ListingPage() {
         const res = await fetch(`/api/listings/${id}`);
         if (!res.ok) throw new Error("Listing not found");
         const data = await res.json();
+        console.log(data, "this is the fetched listing hoe");
         setListing(data);
       } catch {
         navigate("/404");
@@ -56,6 +69,12 @@ export default function ListingPage() {
     isOpen: isMessageOpen,
     onOpen: onMessageOpen,
     onClose: onMessageClose,
+  } = useDisclosure();
+
+  const {
+    isOpen: isKlarnaOpen,
+    onOpen: onKlarnaOpen,
+    onClose: onKlarnaClose,
   } = useDisclosure();
 
   const rotateNext = () => {
@@ -90,6 +109,11 @@ export default function ListingPage() {
     return `${days} day${days !== 1 ? "s" : ""} ago`;
   };
 
+  const getPercentOff = (original, sale) => {
+    if (!original || !sale || original <= sale) return 0;
+    return Math.round(((original - sale) / original) * 100);
+  };
+
   return (
     <>
       {!isLoading && listing && (
@@ -121,11 +145,10 @@ export default function ListingPage() {
                         objectPosition: "center center",
                         cursor: "zoom-in",
                       }}
-                      borderRadius="md"
                       onClick={openImageModal}
                     />
                   ) : (
-                    <Box bg="gray.100" w="100%" h="600px" borderRadius="md" />
+                    <Box bg="gray.100" w="100%" h="600px" />
                   )}
                 </GridItem>
 
@@ -158,115 +181,255 @@ export default function ListingPage() {
                             transition: "opacity 0.2s",
                             cursor: "pointer",
                           }}
-                          borderRadius="md"
                           onClick={() => setActiveIndex(i)}
                         />
                       </GridItem>
                     ))
                   : Array.from({ length: 5 }).map((_, i) => (
                       <GridItem colSpan={1} key={i}>
-                        <Box bg="gray.200" h="80px" borderRadius="md" />
+                        <Box bg="gray.200" h="80px" />
                       </GridItem>
                     ))}
               </Grid>
             </GridItem>
 
             <GridItem colSpan={[12, null, 4]}>
-              <VStack align="start" spacing={5}>
-                <Box>
-                  <Heading size="md">{listing.brand}</Heading>
-                  <Text>{listing.title}</Text>
-                  <Text fontSize="sm">Size: {listing.size}</Text>
-                  <Text fontSize="sm">Color: {listing.color}</Text>
-                  <Text fontSize="sm">Condition: {listing.condition}</Text>
-                </Box>
+              <VStack align="start" spacing={8}>
+                <VStack align="start">
+                  <Heading size="md">{listing.designer}</Heading>
+                  <Text fontSize="sm">{listing.title}</Text>
+                </VStack>
+
+                <VStack align="start">
+                  <Text fontSize="sm">
+                    <Box as="span" fontWeight="semibold">
+                      Size{" "}
+                    </Box>
+                    {listing.department === "Menswear" ? "Men's" : "Women's"} /{" "}
+                    {listing.size}
+                  </Text>
+                  <Text fontSize="sm">
+                    <Box as="span" fontWeight="semibold">
+                      Color{" "}
+                    </Box>
+                    {listing.color}
+                  </Text>
+                  <Text fontSize="sm">
+                    <Box as="span" fontWeight="semibold">
+                      Condition{" "}
+                    </Box>
+                    {listing.condition}
+                  </Text>
+                </VStack>
 
                 <Box>
-                  <Text fontSize="2xl" fontWeight="bold">
-                    ${listing.price?.toLocaleString()}
-                  </Text>
+                  <HStack spacing={2}>
+                    <Text fontSize="2xl" fontWeight="bold">
+                      ${listing.price?.toLocaleString()}
+                    </Text>
+                    {listing.originalPrice && listing.price && (
+                      <Text
+                        fontSize="2xl"
+                        fontWeight="semibold"
+                        color="gray.400"
+                        sx={{
+                          textDecoration: "line-through",
+                          textDecorationThickness: "2px",
+                        }}
+                      >
+                        ${listing.originalPrice?.toLocaleString()}
+                      </Text>
+                    )}
+
+                    {listing.originalPrice && listing.price && (
+                      <Text fontSize="sm" color="gray.500" fontWeight="medium">
+                        {getPercentOff(listing.originalPrice, listing.price)}%
+                        off
+                      </Text>
+                    )}
+                  </HStack>
+
                   <Text fontSize="sm">+ $9 Shipping — US to United States</Text>
                 </Box>
 
-                <HStack w="100%">
-                  <Button
-                    colorScheme="blackAlpha"
-                    flex="1"
-                    as={RouterLink}
-                    to="/checkout"
-                  >
-                    PURCHASE
-                  </Button>
-                </HStack>
+                {listing?.seller?.username !== user.username && (
+                  <KlarnaAffirmButton
+                    onOpen={onKlarnaOpen}
+                    price={listing.price}
+                  />
+                )}
 
-                <HStack w="100%">
-                  <Button variant="outline" flex="1" onClick={onOfferOpen}>
-                    OFFER
-                  </Button>
-                  <Button variant="outline" flex="1" onClick={onMessageOpen}>
-                    MESSAGE
-                  </Button>
-                </HStack>
+                {listing?.seller?.username !== user.username ? (
+                  <VStack w="100%" spacing={2}>
+                    <HStack w="100%">
+                      <Button
+                        colorScheme="blackAlpha"
+                        flex="1"
+                        as={RouterLink}
+                        to="/checkout"
+                      >
+                        PURCHASE
+                      </Button>
+                    </HStack>
 
-                <Divider />
-
-                <Text fontWeight="bold">Authenticated</Text>
+                    <HStack w="100%">
+                      <Button variant="outline" flex="1" onClick={onOfferOpen}>
+                        OFFER
+                      </Button>
+                      <Button
+                        variant="outline"
+                        flex="1"
+                        onClick={onMessageOpen}
+                      >
+                        MESSAGE
+                      </Button>
+                    </HStack>
+                  </VStack>
+                ) : (
+                  <VStack w="100%" spacing={2}>
+                    <Button w="100%" colorScheme="blackAlpha">
+                      DROP PRICE
+                    </Button>
+                    <Button w="100%" variant="outline">
+                      EDIT
+                    </Button>
+                    <Button w="100%" variant="outline">
+                      SEND OFFER
+                    </Button>
+                    <Button w="100%" variant="outline">
+                      DELETE
+                    </Button>
+                  </VStack>
+                )}
 
                 <HStack spacing={4} align="center" w="100%">
                   <Avatar
-                    name="acrnmlvr60"
+                    name={listing?.seller?.username || "fakeuser"}
                     size="sm"
                     bg="gray.200"
                     color="black"
                   />
                   <Box>
                     <Text fontWeight="bold" fontSize="sm">
-                      acrnmlvr60
+                      {listing?.seller?.username || "fakeuser"}
                     </Text>
                     <Text fontSize="xs" color="gray.500">
                       4 items for sale
                     </Text>
                   </Box>
-                  <Button size="sm" ml="auto" variant="outline">
-                    FOLLOW
-                  </Button>
+                  {listing?.seller?.username !== user.username && (
+                    <Button
+                      fontWeight="bold"
+                      size="sm"
+                      fontSize="xs"
+                      ml="auto"
+                      variant="outline"
+                    >
+                      FOLLOW
+                    </Button>
+                  )}
                 </HStack>
 
-                <Box>
-                  <Text fontSize="sm" mb={1}>
-                    {listing.description}
-                  </Text>
-                </Box>
+                <Divider />
 
-                <Box>
-                  <Heading size="xs" mb={2}>
-                    Tags
-                  </Heading>
-                  <HStack spacing={2} wrap="wrap">
-                    {listing.tags?.map((tag) => (
-                      <Badge
-                        key={tag}
-                        variant="outline"
-                        px={2}
-                        py={1}
-                        borderRadius="md"
-                        fontSize="xs"
+                {listing?.description && (
+                  <Box>
+                    <Heading size="xs" mb={2}>
+                      Seller Description
+                    </Heading>
+                    <Text fontSize="sm" mb={1} whiteSpace="pre-line">
+                      {listing.description}
+                    </Text>
+                  </Box>
+                )}
+
+                {listing?.tags.length > 0 && (
+                  <Box>
+                    <Heading size="xs" mb={2}>
+                      Tags
+                    </Heading>
+                    <HStack spacing={2} wrap="wrap">
+                      {listing.tags?.map((tag) => (
+                        <Badge
+                          key={tag}
+                          variant="outline"
+                          px={2}
+                          py={1}
+                          borderRadius="md"
+                          fontSize="xs"
+                        >
+                          #{tag}
+                        </Badge>
+                      ))}
+                    </HStack>
+                  </Box>
+                )}
+
+                <Divider />
+
+                <VStack align="start" spacing={4}>
+                  {listing.authenticated && (
+                    <Flex align="center" gap={2}>
+                      <Text fontWeight="bold" fontSize="sm">
+                        Authenticated
+                      </Text>
+                      <Box
+                        as="svg"
+                        width="5"
+                        height="5"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="gray.500"
+                        strokeWidth="1.5"
                       >
-                        #{tag}
-                      </Badge>
-                    ))}
-                  </HStack>
-                </Box>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 
+       11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 
+       5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c
+       -3.196 0-6.1-1.248-8.25-3.285Z"
+                        />
+                      </Box>
+                    </Flex>
+                  )}
 
-                <Box>
-                  <Text fontSize="xs" color="gray.500">
-                    Posted to I Need It{" "}
-                    {listing.createdAt ? getTimestamp(listing.createdAt) : ""}
-                  </Text>
-                  <Text fontSize="xs" color="gray.400">
-                    Listing ID: {listing._id || "01234567"}
-                  </Text>
-                </Box>
+                  <Box>
+                    <Text fontSize="xs" color="gray.400">
+                      Posted to I Need It{" "}
+                      <Box as="span" color="gray.500">
+                        {listing.createdAt
+                          ? getTimestamp(listing.createdAt)
+                          : ""}
+                      </Box>
+                    </Text>
+                    <Text fontSize="xs" color="gray.400">
+                      Listing ID{" "}
+                      <Box as="span" color="gray.500">
+                        {listing._id || "01234567"}
+                      </Box>
+                    </Text>
+                  </Box>
+
+                  {listing?.seller?.username !== user.username && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      fontWeight="bold"
+                      fontSize="xs"
+                      textTransform="uppercase"
+                      leftIcon={<WarningIcon boxSize={3.5} />}
+                    >
+                      Report Listing
+                    </Button>
+                  )}
+                </VStack>
+
+                {listing?.seller?.username !== user.username && <Divider />}
+
+                {listing?.seller?.username !== user.username && (
+                  <PurchaseProtection />
+                )}
               </VStack>
             </GridItem>
           </Grid>
@@ -275,6 +438,14 @@ export default function ListingPage() {
 
       <OfferModal isOpen={isOfferOpen} onClose={onOfferClose} />
       <MessageModal isOpen={isMessageOpen} onClose={onMessageClose} />
+
+      {listing?.price && (
+        <KlarnaAffirmModal
+          isOpen={isKlarnaOpen}
+          onClose={onKlarnaClose}
+          price={listing.price}
+        />
+      )}
 
       {isLoading && <ListingSkeleton />}
 
@@ -321,7 +492,6 @@ export default function ListingPage() {
               maxW="90vw"
               maxH="90vh"
               objectFit="contain"
-              borderRadius="md"
             />
           </Box>
 

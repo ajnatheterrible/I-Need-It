@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import categoryMap from "../data/categoryMap.js";
 import countries from "../data/countries.js";
+import designers from "../data/designers.js";
 
 const ListingSchema = new mongoose.Schema(
   {
@@ -13,6 +14,7 @@ const ListingSchema = new mongoose.Schema(
     },
     designer: {
       type: String,
+      enum: designers,
       required() {
         return !this.isDraft;
       },
@@ -22,7 +24,11 @@ const ListingSchema = new mongoose.Schema(
       type: String,
       maxlength: 1000,
     },
-    originalPrice: Number,
+    originalPrice: {
+      type: Number,
+      min: 1,
+      max: 200000,
+    },
     price: {
       type: Number,
       required() {
@@ -155,7 +161,7 @@ const ListingSchema = new mongoose.Schema(
     isDraft: { type: Boolean, default: false },
     isDeleted: { type: Boolean, default: false },
     isArchived: { type: Boolean, default: false },
-    authenticated: { type: Boolean, default: false },
+    authenticated: { type: Boolean, default: true },
     listingCode: String,
     reports: [{ type: mongoose.Schema.Types.ObjectId, ref: "Report" }],
   },

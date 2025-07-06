@@ -52,7 +52,7 @@ export default function MessageModal({ isOpen, onClose }) {
       <ModalOverlay />
       <ModalContent maxW="500px" borderRadius={0}>
         <ModalHeader textAlign="center" fontWeight="bold">
-          Ask A Question
+          Ask a question
         </ModalHeader>
         <Divider />
         <ModalCloseButton />

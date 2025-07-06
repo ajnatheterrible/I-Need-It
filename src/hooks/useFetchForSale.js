@@ -32,10 +32,10 @@ export default function useFetchForSale() {
         const listings = await res.json();
 
         setFetchedData({ forSale: listings });
-
-        hasFetchedForSaleRef.current = true;
       } catch (err) {
         console.error("❌ Error fetching listings for sale:", err);
+      } finally {
+        hasFetchedForSaleRef.current = true;
       }
     };
 

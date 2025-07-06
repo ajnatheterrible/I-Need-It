@@ -2,7 +2,6 @@ import { useState, useRef } from "react";
 import {
   Box,
   Input,
-  HStack,
   Tag,
   TagLabel,
   TagCloseButton,
@@ -10,6 +9,7 @@ import {
   FormLabel,
   SimpleGrid,
   Grid,
+  Flex,
 } from "@chakra-ui/react";
 
 function TagInput({ tags, setTags }) {
@@ -64,19 +64,20 @@ function TagInput({ tags, setTags }) {
             {tags.map((tag) => (
               <Tag
                 size="md"
-                borderRadius="full"
+                borderRadius="md"
                 variant="solid"
                 bg="gray.100"
                 color="gray.800"
                 px={3}
-                py={1}
-                fontWeight="medium"
+                py={1.5}
               >
-                <TagLabel>{tag}</TagLabel>
-                <TagCloseButton
-                  onClick={() => removeTag(tag)}
-                  _hover={{ bg: "gray.300" }}
-                />
+                <Flex gap={1}>
+                  <TagLabel>{tag}</TagLabel>
+                  <TagCloseButton
+                    onClick={() => removeTag(tag)}
+                    _hover={{ bg: "gray.300" }}
+                  />
+                </Flex>
               </Tag>
             ))}
             <Input
@@ -88,12 +89,14 @@ function TagInput({ tags, setTags }) {
               boxShadow="none"
               outline="none"
               _focus={{ boxShadow: "none" }}
-              _placeholder={{ color: "gray.400" }}
+              _placeholder={{ color: "gray.500" }}
               placeholder={
                 tags.length === 0 ? "Add tags (hit Enter or Tab)" : ""
               }
               flex="1"
               minW="100px"
+              py={4}
+              px={1}
             />
           </Box>
         </Grid>

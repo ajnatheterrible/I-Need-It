@@ -2,14 +2,19 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import fs from "fs/promises";
 import Listing from "../models/Listing.js";
-import User from "../models/User.js";
-import sampleListings from "./sampleListings.json" assert { type: "json" };
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 dotenv.config({ path: path.join(__dirname, "../.env") });
+
+const data = await fs.readFile(
+  path.join(__dirname, "sampleListings.json"),
+  "utf-8"
+);
+const sampleListings = JSON.parse(data);
 
 const seed = async () => {
   try {

@@ -172,7 +172,7 @@ export default function AuthModal({
             />
 
             {view === "login" && (
-              <Text fontSize="sm" color="blue.500" textAlign="right">
+              <Text fontSize="sm" color="gray.500" textAlign="right">
                 <Link
                   onClick={() => {
                     onClose();

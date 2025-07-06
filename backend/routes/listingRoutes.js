@@ -15,7 +15,4 @@ router.get("/random", getRandomListings);
 router.get("/get-drafts", requireAuth, getDrafts);
 router.get("/:id", getListingById);
 
-// POST /api/listings
-// router.post("/", createListing);
-
 export default router;
