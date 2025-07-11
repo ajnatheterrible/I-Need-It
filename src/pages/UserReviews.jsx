@@ -29,7 +29,7 @@ const dummyReviews = [
 ];
 
 const UserReviews = () => {
-  const hasFetchedReviews = true; // ✅ mock this as true if you're simulating fetch
+  const hasFetchedReviews = true;
   const hasReviews = Array.isArray(dummyReviews) && dummyReviews.length > 0;
 
   return (

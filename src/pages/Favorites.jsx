@@ -12,26 +12,28 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { FaHeart } from "react-icons/fa";
+
 import { useState, useMemo } from "react";
 
 import Container from "../components/shared/Container";
 import Footer from "../components/layout/Footer";
+import FavoritesSkeleton from "../components/skeletons/FavoritesSkeleton";
 
-import useFetchFavorites, {
-  hasFetchedFavoritesRef,
-} from "../hooks/useFetchFavorites";
+import useFetchFavorites from "../hooks/useFetchFavorites";
 import useAuthStore from "../store/authStore";
 import getTimestamp from "../utils/getTimestamp";
 import { toggleFavorite } from "../utils/favoriteUtils";
 
 export default function Favorites() {
+  const [hasFetchedFavorites, setHasFetchedFavorites] = useState(false);
   const [sortOption, setSortOption] = useState("date");
   const toast = useToast();
 
-  useFetchFavorites();
+  useFetchFavorites(hasFetchedFavorites, setHasFetchedFavorites);
 
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
   const token = useAuthStore((s) => s.token);
-  const favorites = useAuthStore((s) => s.fetchedData?.favorites);
+  const favorites = useAuthStore((s) => s.fetchedData.favorites);
   const setFetchedData = useAuthStore((s) => s.setFetchedData);
 
   const sortedFavorites = useMemo(() => {
@@ -47,19 +49,12 @@ export default function Favorites() {
   }, [favorites, sortOption]);
 
   const handleUnfavorite = async (listingId) => {
+    if (!isLoggedIn) return;
+
     try {
-      await toggleFavorite(listingId, token, true);
+      const data = await toggleFavorite(listingId, token, true);
 
-      const updatedFavorites = favorites.filter((fav) => fav._id !== listingId);
-
-      setFetchedData((prev) => ({ ...prev, favorites: updatedFavorites }));
-
-      toast({
-        title: "Removed from favorites.",
-        status: "info",
-        duration: 2000,
-        isClosable: true,
-      });
+      setFetchedData({ favorites: data.favorites });
     } catch (err) {
       toast({
         title: "Error",
@@ -70,10 +65,6 @@ export default function Favorites() {
       });
     }
   };
-
-  if (!hasFetchedFavoritesRef.current || !Array.isArray(favorites)) {
-    return null;
-  }
 
   return (
     <>
@@ -106,74 +97,82 @@ export default function Favorites() {
             spacingX={6}
             mt={16}
           >
-            {sortedFavorites.map((item) => (
-              <Box
-                key={item._id}
-                borderWidth="1px"
-                borderRadius="md"
-                overflow="hidden"
-              >
-                <Box position="relative" height="200px">
-                  <Image
-                    src={item.thumbnail}
-                    alt={item.title}
-                    height="100%"
-                    width="100%"
-                    objectFit="cover"
-                  />
-                  {item.isFreeShipping && (
-                    <Badge
-                      position="absolute"
-                      top="16px"
-                      left="8px"
-                      bg="#DCEF31"
-                      color="black"
-                      fontWeight="bold"
-                      fontSize="0.7em"
-                      px={2}
-                      py={1}
-                      borderRadius="sm"
-                    >
-                      FREE SHIPPING
-                    </Badge>
-                  )}
-                </Box>
-
-                <Box p={3}>
-                  <Text fontSize="xs" color="gray.500">
-                    {getTimestamp(item.createdAt)}
-                  </Text>
-
-                  <Box borderBottom="1px solid" borderColor="gray.200" my={2} />
-
-                  <HStack justify="space-between" mt={1}>
-                    <Text fontWeight="bold" fontSize="sm" noOfLines={1}>
-                      {item.designer}
-                    </Text>
-                    <Text fontSize="xs" color="gray.600">
-                      {item.size}
-                    </Text>
-                  </HStack>
-
-                  <Text fontSize="xs" color="gray.600" noOfLines={1}>
-                    {item.title}
-                  </Text>
-
-                  <HStack justify="space-between" mt={4}>
-                    <Text fontSize="sm" fontWeight="bold">
-                      ${item.price.toLocaleString()}
-                    </Text>
-                    // Favorite button logic
-                    <IconButton
-                      size="sm"
-                      icon={<FaHeart color="black" />}
-                      aria-label="Unfavorite"
-                      onClick={() => handleUnfavorite(item._id)}
+            {!hasFetchedFavorites ? (
+              <FavoritesSkeleton />
+            ) : (
+              sortedFavorites.map((item) => (
+                <Box
+                  key={item._id}
+                  borderWidth="1px"
+                  borderRadius="md"
+                  overflow="hidden"
+                >
+                  <Box position="relative" height="200px">
+                    <Image
+                      src={item.thumbnail}
+                      alt={item.title}
+                      height="100%"
+                      width="100%"
+                      objectFit="cover"
                     />
-                  </HStack>
+                    {item.isFreeShipping && (
+                      <Badge
+                        position="absolute"
+                        top="16px"
+                        left="8px"
+                        bg="#DCEF31"
+                        color="black"
+                        fontWeight="bold"
+                        fontSize="0.7em"
+                        px={2}
+                        py={1}
+                        borderRadius="sm"
+                      >
+                        FREE SHIPPING
+                      </Badge>
+                    )}
+                  </Box>
+
+                  <Box p={3}>
+                    <Text fontSize="xs" color="gray.500">
+                      {getTimestamp(item.createdAt)}
+                    </Text>
+
+                    <Box
+                      borderBottom="1px solid"
+                      borderColor="gray.200"
+                      my={2}
+                    />
+
+                    <HStack justify="space-between" mt={1}>
+                      <Text fontWeight="bold" fontSize="sm" noOfLines={1}>
+                        {item.designer}
+                      </Text>
+                      <Text fontSize="xs" color="gray.600">
+                        {item.size}
+                      </Text>
+                    </HStack>
+
+                    <Text fontSize="xs" color="gray.600" noOfLines={1}>
+                      {item.title}
+                    </Text>
+
+                    <HStack justify="space-between" mt={4}>
+                      <Text fontSize="sm" fontWeight="bold">
+                        ${item?.price?.toLocaleString()}
+                      </Text>
+
+                      <IconButton
+                        size="sm"
+                        icon={<FaHeart color="black" />}
+                        aria-label="Unfavorite"
+                        onClick={() => handleUnfavorite(item._id)}
+                      />
+                    </HStack>
+                  </Box>
                 </Box>
-              </Box>
-            ))}
+              ))
+            )}
           </SimpleGrid>
         </Box>
       </Container>

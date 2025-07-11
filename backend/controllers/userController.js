@@ -7,6 +7,7 @@ export const getUserFavorites = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id).populate("favorites");
   if (!user) throw createError("User not found", 404);
   res.status(200).json(user.favorites);
+  console.log("this is em getitng the damn favorites", user.favorites);
 });
 
 export const addFavorite = asyncHandler(async (req, res) => {
@@ -28,13 +29,14 @@ export const addFavorite = asyncHandler(async (req, res) => {
   if (!user.favorites.includes(listingId)) {
     user.favorites.push(listingId);
     listing.favoritesCount += 1;
-
     await Promise.all([user.save(), listing.save()]);
   }
 
+  const updatedUser = await user.populate("favorites");
+
   res.status(200).json({
     message: "Added to favorites",
-    favorites: user.favorites,
+    favorites: updatedUser.favorites,
   });
 });
 
@@ -55,13 +57,14 @@ export const removeFavorite = asyncHandler(async (req, res) => {
       (fav) => fav.toString() !== listingId
     );
     listing.favoritesCount = Math.max(0, listing.favoritesCount - 1);
-
     await Promise.all([user.save(), listing.save()]);
   }
 
+  const updatedUser = await user.populate("favorites");
+
   res.status(200).json({
     message: "Removed from favorites",
-    favorites: user.favorites,
+    favorites: updatedUser.favorites,
   });
 });
 

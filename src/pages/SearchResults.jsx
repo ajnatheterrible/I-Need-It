@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import {
   Box,
@@ -14,11 +14,7 @@ import {
   Flex,
 } from "@chakra-ui/react";
 import { FaRegHeart, FaHeart } from "react-icons/fa";
-import {
-  useSearchParams,
-  useNavigate,
-  useOutletContext,
-} from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 
 import Container from "../components/shared/Container";
 import Footer from "../components/layout/Footer";
@@ -35,15 +31,13 @@ import useAuthStore from "../store/authStore";
 import { useAuthModal } from "../context/AuthModalContext";
 
 export default function SearchResults() {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const onOpenAuthModal = useAuthModal();
+  const [searchParams] = useSearchParams();
   const query = searchParams.get("query");
 
   const userId = useAuthStore((s) => s.user._id);
   const token = useAuthStore((s) => s.token);
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
-  const sizes = useAuthStore((s) => s.fetchedData?.sizes);
   const fetchedData = useAuthStore((s) => s.fetchedData);
   const setFetchedData = useAuthStore((s) => s.setFetchedData);
 
@@ -64,7 +58,6 @@ export default function SearchResults() {
     priceMin: searchParams.get("priceMin") || null,
     priceMax: searchParams.get("priceMax") || null,
   });
-  const [, forceUpdate] = useState(false);
 
   const favoriteIds = useMemo(() => {
     const favorites = fetchedData?.favorites;
@@ -112,8 +105,7 @@ export default function SearchResults() {
     try {
       const data = await toggleFavorite(listingId, token, isAlreadyFavorited);
 
-      setFetchedData({ favorites: [...data.favorites] });
-      forceUpdate((prev) => !prev);
+      setFetchedData({ favorites: data.favorites });
     } catch (err) {
       console.error("❌ Failed to toggle favorite", err);
     }

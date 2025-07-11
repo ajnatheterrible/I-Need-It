@@ -2,7 +2,6 @@ import {
   AlertDialog,
   AlertDialogBody,
   AlertDialogFooter,
-  AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
   Button,
@@ -10,17 +9,38 @@ import {
 } from "@chakra-ui/react";
 import { useRef } from "react";
 
-function DeleteDraftDialog({ onConfirm, isSubmitting }) {
+function DeleteDraftDialog({ onConfirm, isSubmitting, page }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef();
+
+  const isDraftPage = page === "drafts";
 
   return (
     <>
       <Button
-        variant="outline"
-        colorScheme="red"
         onClick={onOpen}
         isDisabled={isSubmitting}
+        {...(isDraftPage
+          ? {
+              w: "100%",
+              h: "30px",
+              variant: "outline",
+              color: "red.500",
+              border: "1px solid",
+              borderColor: "red.500",
+              fontWeight: "bold",
+              textTransform: "uppercase",
+              fontSize: "small",
+              _hover: {
+                bg: "red.50",
+              },
+              px: 6,
+              py: 2,
+            }
+          : {
+              variant: "outline",
+              colorScheme: "red",
+            })}
       >
         Discard
       </Button>

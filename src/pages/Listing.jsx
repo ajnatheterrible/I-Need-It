@@ -11,13 +11,18 @@ import {
   Badge,
   useDisclosure,
   Avatar,
+  IconButton,
   Img,
   Flex,
 } from "@chakra-ui/react";
 import { WarningIcon } from "@chakra-ui/icons";
+import { FaHeart, FaRegHeart } from "react-icons/fa";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link as RouterLink, useParams, useNavigate } from "react-router-dom";
+
+import useFetchFavorites from "../hooks/useFetchFavorites";
+import { toggleFavorite } from "../utils/favoriteUtils";
 
 import Container from "../components/shared/Container";
 import Footer from "../components/layout/Footer";
@@ -35,6 +40,10 @@ export default function ListingPage() {
   const navigate = useNavigate();
 
   const user = useAuthStore((s) => s.user);
+  const token = useAuthStore((s) => s.token);
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
+  const favorites = useAuthStore((s) => s.fetchedData?.favorites);
+  const setFetchedData = useAuthStore((s) => s.setFetchedData);
 
   const [listing, setListing] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -48,7 +57,7 @@ export default function ListingPage() {
         const res = await fetch(`/api/listings/${id}`);
         if (!res.ok) throw new Error("Listing not found");
         const data = await res.json();
-        console.log(data, "this is the fetched listing hoe");
+
         setListing(data);
       } catch {
         navigate("/404");
@@ -57,7 +66,39 @@ export default function ListingPage() {
       }
     };
     fetchListing();
-  }, [id, navigate]);
+  }, [id]);
+
+  useFetchFavorites();
+
+  const favoriteIds = useMemo(() => {
+    if (!Array.isArray(favorites)) return [];
+
+    return favorites.map((f) => (f && typeof f === "object" ? f._id : f));
+  }, [favorites]);
+
+  const handleFavorite = async (listingId) => {
+    if (!isLoggedIn) return;
+
+    const isFavorited = favoriteIds.includes(listingId);
+
+    try {
+      const data = await toggleFavorite(listingId, token, isFavorited);
+      setFetchedData({ favorites: [...data.favorites] });
+
+      const updated = data.favorites.find((f) => f._id === listingId);
+
+      if (updated) {
+        setListing(updated);
+      } else {
+        setListing((prev) => ({
+          ...prev,
+          favoritesCount: Math.max(0, (prev.favoritesCount || 1) - 1),
+        }));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const {
     isOpen: isOfferOpen,
@@ -135,9 +176,9 @@ export default function ListingPage() {
                 </GridItem>
 
                 <GridItem colSpan={6}>
-                  {listing.images?.length > 0 ? (
+                  {listing?.images?.length > 0 ? (
                     <Img
-                      src={listing.images[activeIndex]}
+                      src={listing?.images[activeIndex]}
                       style={{
                         width: "100%",
                         height: "600px",
@@ -167,7 +208,7 @@ export default function ListingPage() {
               </Grid>
 
               <Grid templateColumns="repeat(8, 1fr)" gap={2} mt={2}>
-                {listing.images?.length > 0
+                {listing?.images?.length > 0
                   ? listing.images.map((img, i) => (
                       <GridItem colSpan={1} key={i}>
                         <Img
@@ -195,39 +236,56 @@ export default function ListingPage() {
 
             <GridItem colSpan={[12, null, 4]}>
               <VStack align="start" spacing={8}>
-                <VStack align="start">
-                  <Heading size="md">{listing.designer}</Heading>
-                  <Text fontSize="sm">{listing.title}</Text>
-                </VStack>
+                <HStack spacing={4} justify="space-between" w="100%">
+                  <VStack align="start">
+                    <Heading size="md">{listing?.designer}</Heading>
+                    <Text fontSize="sm">{listing?.title}</Text>
+                  </VStack>
+                  <VStack align="center">
+                    <IconButton
+                      p={1}
+                      icon={
+                        favoriteIds.includes(listing?._id) ? (
+                          <FaHeart />
+                        ) : (
+                          <FaRegHeart />
+                        )
+                      }
+                      onClick={() => handleFavorite(listing._id)}
+                    />
+
+                    <Text fontSize="xs">{listing?.favoritesCount}</Text>
+                  </VStack>
+                </HStack>
 
                 <VStack align="start">
                   <Text fontSize="sm">
                     <Box as="span" fontWeight="semibold">
                       Size{" "}
                     </Box>
-                    {listing.department === "Menswear" ? "Men's" : "Women's"} /{" "}
-                    {listing.size}
+                    {listing?.department === "Menswear" ? "Men's" : "Women's"} /{" "}
+                    {listing?.size}
                   </Text>
                   <Text fontSize="sm">
                     <Box as="span" fontWeight="semibold">
                       Color{" "}
                     </Box>
-                    {listing.color}
+                    {listing?.color}
                   </Text>
                   <Text fontSize="sm">
                     <Box as="span" fontWeight="semibold">
                       Condition{" "}
                     </Box>
-                    {listing.condition}
+                    {listing?.condition}
                   </Text>
                 </VStack>
 
                 <Box>
                   <HStack spacing={2}>
                     <Text fontSize="2xl" fontWeight="bold">
-                      ${listing.price?.toLocaleString()}
+                      ${listing?.price?.toLocaleString()}
                     </Text>
-                    {listing.originalPrice && listing.price && (
+                    {listing?.originalPrice && listing?.price && (
                       <Text
                         fontSize="2xl"
                         fontWeight="semibold"
@@ -237,11 +295,11 @@ export default function ListingPage() {
                           textDecorationThickness: "2px",
                         }}
                       >
-                        ${listing.originalPrice?.toLocaleString()}
+                        ${listing?.originalPrice?.toLocaleString()}
                       </Text>
                     )}
 
-                    {listing.originalPrice && listing.price && (
+                    {listing?.originalPrice && listing?.price && (
                       <Text fontSize="sm" color="gray.500" fontWeight="medium">
                         {getPercentOff(listing.originalPrice, listing.price)}%
                         off
@@ -343,7 +401,7 @@ export default function ListingPage() {
                   </Box>
                 )}
 
-                {listing?.tags.length > 0 && (
+                {listing?.tags?.length > 0 && (
                   <Box>
                     <Heading size="xs" mb={2}>
                       Tags
@@ -368,7 +426,7 @@ export default function ListingPage() {
                 <Divider />
 
                 <VStack align="start" spacing={4}>
-                  {listing.authenticated && (
+                  {listing?.authenticated && (
                     <Flex align="center" gap={2}>
                       <Text fontWeight="bold" fontSize="sm">
                         Authenticated
@@ -398,7 +456,7 @@ export default function ListingPage() {
                     <Text fontSize="xs" color="gray.400">
                       Posted to I Need It{" "}
                       <Box as="span" color="gray.500">
-                        {listing.createdAt
+                        {listing?.createdAt
                           ? getTimestamp(listing.createdAt)
                           : ""}
                       </Box>
@@ -406,7 +464,7 @@ export default function ListingPage() {
                     <Text fontSize="xs" color="gray.400">
                       Listing ID{" "}
                       <Box as="span" color="gray.500">
-                        {listing._id || "01234567"}
+                        {listing?._id || "01234567"}
                       </Box>
                     </Text>
                   </Box>
@@ -447,7 +505,7 @@ export default function ListingPage() {
         />
       )}
 
-      {isLoading && <ListingSkeleton />}
+      {isLoading && !listing && <ListingSkeleton />}
 
       {isImageOpen && (
         <Box

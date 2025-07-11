@@ -16,6 +16,7 @@ import Footer from "../components/layout/Footer";
 import SellerSidebar from "../components/sidebars/SellerSidebar";
 import SellerProfileHeader from "../components/profile/SellerProfileHeader";
 import DraftsSkeleton from "../components/skeletons/DraftsSkeleton";
+import DeleteDraftDialog from "../components/ui/DeleteDraftDialog";
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -27,6 +28,7 @@ export default function Drafts() {
 
   const [drafts, setDrafts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const getDraftCompletionPercent = (draft) => {
     const requiredFields = [
@@ -59,28 +61,34 @@ export default function Drafts() {
     return percent;
   };
 
-  const deleteDraft = async (draftId, token) => {
+  const handleDeleteDraft = async (draftId) => {
+    if (!draftId) return;
+
     try {
-      const res = await fetch("/api/market/delete-draft", {
+      setIsSubmitting(true);
+
+      const res = await fetch(`/api/market/delete-draft`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
           ...(token && { Authorization: `Bearer ${token}` }),
         },
-        credentials: "include",
+        credentals: "include",
         body: JSON.stringify({ draftId }),
       });
 
-      const data = await res.json();
+      if (!res.ok) {
+        const data = await res.json();
 
-      if (res.ok) {
-        return data.message;
-      } else {
-        throw new Error(data.error || "Failed to delete draft");
+        throw new Error(data.message);
       }
+
+      setDrafts((prev) => prev.filter((d) => d._id !== draftId));
     } catch (err) {
+      setIsSubmitting(false);
       console.error("Error deleting draft:", err);
-      return null;
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -201,7 +209,14 @@ export default function Drafts() {
                             >
                               Review and Submit
                             </Button>
-                            <Button
+
+                            <DeleteDraftDialog
+                              onConfirm={() => handleDeleteDraft(item._id)}
+                              isSubmitting={isSubmitting}
+                              page="drafts"
+                            />
+
+                            {/* <Button
                               w="full"
                               size="sm"
                               variant="outline"
@@ -224,7 +239,7 @@ export default function Drafts() {
                               }}
                             >
                               Discard
-                            </Button>
+                            </Button> */}
                           </VStack>
                         </Box>
                       );

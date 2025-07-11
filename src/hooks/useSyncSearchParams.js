@@ -10,7 +10,7 @@ export default function useSyncSearchParams(
   setIsUsingMySizes
 ) {
   const [, setSearchParams] = useSearchParams();
-  const sizes = useAuthStore((s) => s.user?.sizes);
+  const sizes = useAuthStore((s) => s.fetchedData?.sizes);
 
   useEffect(() => {
     if (query === null || query === undefined) return;
