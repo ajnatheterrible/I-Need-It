@@ -69,6 +69,7 @@ export default function NavbarGuest() {
               <SearchIcon color="gray.500" />
             </InputLeftElement>
             <Input
+              borderRadius="0"
               placeholder="Search for anything"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -78,12 +79,16 @@ export default function NavbarGuest() {
               <Button
                 onClick={handleSearch}
                 h="70%"
-                borderLeftRadius="0"
-                borderRightRadius="0"
-                colorScheme="blackAlpha"
-                variant="solid"
-                fontSize="sm"
+                border="1px"
+                color="gray.800"
+                borderColor="gray.800"
+                borderRadius="0"
+                fontSize="xs"
+                bg="white"
                 w="80%"
+                _hover={{
+                  bg: "gray.100",
+                }}
               >
                 SEARCH
               </Button>
@@ -92,24 +97,41 @@ export default function NavbarGuest() {
 
           <Button
             size="sm"
+            fontSize="xs"
             variant="outline"
+            borderRadius="0"
+            borderColor="gray.800"
             textTransform="uppercase"
-            fontWeight="medium"
             minW="64px"
-            h="40px"
             px="0"
             onClick={() => onOpenAuthModal("register")}
+            _hover={{
+              bg: "gray.100",
+            }}
           >
             SELL
           </Button>
 
           <HStack spacing={4}>
-            <Button variant="ghost" onClick={() => onOpenAuthModal("register")}>
+            <Button
+              size="sm"
+              borderRadius="0"
+              fontSize="xs"
+              variant="ghost"
+              onClick={() => onOpenAuthModal("register")}
+            >
               Sign Up
             </Button>
             <Button
-              colorScheme="blackAlpha"
+              borderRadius="0"
+              size="sm"
+              fontSize="xs"
+              bg="black"
+              color="white"
               onClick={() => onOpenAuthModal("login")}
+              _hover={{
+                bg: "#2c2c2c",
+              }}
             >
               Log In
             </Button>

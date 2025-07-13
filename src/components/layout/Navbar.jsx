@@ -101,6 +101,7 @@ export default function Navbar() {
               <SearchIcon color="gray.500" />
             </InputLeftElement>
             <Input
+              borderRadius="0"
               placeholder="Search for anything"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -110,12 +111,16 @@ export default function Navbar() {
               <Button
                 onClick={handleSearch}
                 h="70%"
-                borderLeftRadius="0"
-                borderRightRadius="0"
-                colorScheme="blackAlpha"
-                variant="solid"
-                fontSize="sm"
+                border="1px"
+                color="gray.800"
+                borderColor="gray.800"
+                borderRadius="0"
+                fontSize="xs"
+                bg="white"
                 w="80%"
+                _hover={{
+                  bg: "gray.100",
+                }}
               >
                 SEARCH
               </Button>
@@ -124,14 +129,17 @@ export default function Navbar() {
 
           <Button
             size="sm"
+            fontSize="xs"
             variant="outline"
+            borderRadius="0"
+            borderColor="gray.800"
             textTransform="uppercase"
-            fontWeight="medium"
             minW="64px"
-            h="40px"
             px="0"
-            as={RouterLink}
-            to="/sell"
+            onClick={() => onOpenAuthModal("register")}
+            _hover={{
+              bg: "gray.100",
+            }}
           >
             SELL
           </Button>

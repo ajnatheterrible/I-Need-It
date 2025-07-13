@@ -134,8 +134,7 @@ export default function AuthModal({
                     fontSize="xs"
                     color={!isValidUsername ? "red.500" : "gray.500"}
                   >
-                    3–30 characters, letters and numbers only. No symbols or
-                    spaces.
+                    3–30 characters, letters and numbers only
                   </Text>
                 )}
               </>
@@ -155,7 +154,7 @@ export default function AuthModal({
                 fontSize="xs"
                 color={!isValidEmail ? "red.500" : "gray.500"}
               >
-                Enter a valid email address.
+                Enter a valid email address
               </Text>
             )}
 
@@ -191,7 +190,7 @@ export default function AuthModal({
                 fontSize="xs"
                 color={!isStrongPassword ? "red.500" : "gray.500"}
               >
-                Minimum 6 characters, with uppercase, number, and symbol.
+                Minimum 6 characters, one uppercase, one number, and one symbol
               </Text>
             )}
 
@@ -211,10 +210,12 @@ export default function AuthModal({
               {view === "login" ? "LOG IN" : "SIGN UP"}
             </Button>
 
-            <Text fontSize="sm" color="gray.500" textAlign="center">
-              {view === "login"
-                ? "Don't have an account?"
-                : "Already have an account?"}{" "}
+            <HStack mt={4} justify="center" spacing="2">
+              <Text fontSize="sm" color="gray.500" textAlign="center">
+                {view === "login"
+                  ? "Don't have an account?"
+                  : "Already have an account?"}{" "}
+              </Text>
               <Button
                 variant="link"
                 colorScheme="blackAlpha"
@@ -222,7 +223,7 @@ export default function AuthModal({
               >
                 {view === "login" ? "Sign up" : "Log in"}
               </Button>
-            </Text>
+            </HStack>
 
             <HStack align="center" justify="center" my={4}>
               <Divider />
