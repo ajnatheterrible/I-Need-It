@@ -85,11 +85,13 @@ export default function AuthModal({
 
       if (res.ok) {
         login(data.user, data.accessToken);
+
         onClose();
       } else {
         setErrorMessage(data.message || "Something went wrong");
       }
     } catch (err) {
+      console.log(err);
       setErrorMessage("Network error. Please try again.");
     }
 

@@ -3,33 +3,33 @@ import {
   Flex,
   HStack,
   Button,
-  Text,
+  IconButton,
   Input,
   InputGroup,
   InputLeftElement,
   InputRightElement,
+  Text,
 } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
-
+import { useState, useEffect } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { useState } from "react";
-
-import { useAuthModal } from "../../context/AuthModalContext";
 
 import Container from "../shared/Container";
+import NavSubMenu from "./NavSubMenu";
+import { useAuthModal } from "../../context/AuthModalContext";
 
 export default function NavbarGuest() {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchParams] = useSearchParams();
 
-  const onOpenAuthModal = useAuthModal();
-  const navigate = useNavigate();
   const location = useLocation();
+  const navigate = useNavigate();
   const query = searchParams.get("query");
+
+  const onOpenAuthModal = useAuthModal();
 
   const handleSearch = (e) => {
     e.preventDefault();
-
     if (!searchTerm.trim()) {
       navigate("/shop");
     } else {
@@ -38,7 +38,6 @@ export default function NavbarGuest() {
   };
 
   useEffect(() => {
-    setActiveMenu(null);
     setSearchTerm("");
   }, [location.pathname, query]);
 
@@ -52,10 +51,9 @@ export default function NavbarGuest() {
       right="0"
       zIndex="1000"
       bg="white"
-      mb={10}
     >
       <Container>
-        <Flex align="center" justify="space-between" py={4} position="relative">
+        <Flex align="center" justify="space-between" py={4}>
           <Text
             fontSize="xl"
             fontWeight="bold"
@@ -74,11 +72,7 @@ export default function NavbarGuest() {
               placeholder="Search for anything"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleSearch(e);
-                }
-              }}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch(e)}
             />
             <InputRightElement width="90px">
               <Button
@@ -99,6 +93,7 @@ export default function NavbarGuest() {
           <Button
             size="sm"
             variant="outline"
+            textTransform="uppercase"
             fontWeight="medium"
             minW="64px"
             h="40px"
@@ -121,6 +116,9 @@ export default function NavbarGuest() {
           </HStack>
         </Flex>
       </Container>
+
+      <Box borderBottom="1px solid" borderColor="gray.200" />
+      <NavSubMenu />
     </Box>
   );
 }

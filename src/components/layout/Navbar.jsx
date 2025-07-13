@@ -25,7 +25,6 @@ import { useState, useRef, useEffect } from "react";
 
 import Container from "../shared/Container";
 import useAuthStore from "../../store/authStore";
-import { useAuthModal } from "../../context/AuthModalContext";
 import NavSubMenu from "./NavSubMenu";
 
 export default function Navbar() {
@@ -39,9 +38,7 @@ export default function Navbar() {
   const query = searchParams.get("query");
 
   const user = useAuthStore((s) => s.user);
-  const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
   const logout = useAuthStore((s) => s.logout);
-  const onOpenAuthModal = useAuthModal();
 
   useEffect(() => {
     setSearchTerm("");
@@ -125,180 +122,146 @@ export default function Navbar() {
             </InputRightElement>
           </InputGroup>
 
-          {isLoggedIn ? (
-            <Button
-              size="sm"
-              variant="outline"
-              textTransform="uppercase"
-              fontWeight="medium"
-              minW="64px"
-              h="40px"
-              px="0"
-              as={RouterLink}
-              to="/sell"
-            >
-              SELL
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              variant="outline"
-              textTransform="uppercase"
-              fontWeight="medium"
-              minW="64px"
-              h="40px"
-              px="0"
-              onClick={() => onOpenAuthModal("register")}
-            >
-              SELL
-            </Button>
-          )}
+          <Button
+            size="sm"
+            variant="outline"
+            textTransform="uppercase"
+            fontWeight="medium"
+            minW="64px"
+            h="40px"
+            px="0"
+            as={RouterLink}
+            to="/sell"
+          >
+            SELL
+          </Button>
 
           <HStack spacing={4} position="relative">
-            {isLoggedIn ? (
-              <>
-                <IconButton
-                  icon={<FaRegCommentDots />}
-                  aria-label="Messages"
-                  variant="ghost"
-                  as={RouterLink}
-                  to="/messages"
-                />
-                <IconButton
-                  icon={<FaRegHeart />}
-                  aria-label="Favorites"
-                  variant="ghost"
-                  as={RouterLink}
-                  to="/favorites"
-                />
-                <IconButton
-                  icon={<FaRegUser />}
-                  aria-label="Profile"
-                  variant="ghost"
-                  onClick={() => setIsModalOpen((prev) => !prev)}
-                />
-                {isModalOpen && (
-                  <Box
-                    ref={profileDropdownRef}
-                    position="absolute"
-                    top="48px"
-                    right="0"
-                    transform="translateX(40%)"
-                    bg="white"
-                    boxShadow="md"
-                    borderRadius="md"
-                    zIndex="1001"
-                    px={6}
-                    py={4}
+            <IconButton
+              icon={<FaRegCommentDots />}
+              aria-label="Messages"
+              variant="ghost"
+              as={RouterLink}
+              to="/messages"
+            />
+            <IconButton
+              icon={<FaRegHeart />}
+              aria-label="Favorites"
+              variant="ghost"
+              as={RouterLink}
+              to="/favorites"
+            />
+            <IconButton
+              icon={<FaRegUser />}
+              aria-label="Profile"
+              variant="ghost"
+              onClick={() => setIsModalOpen((prev) => !prev)}
+            />
+            {isModalOpen && (
+              <Box
+                ref={profileDropdownRef}
+                position="absolute"
+                top="48px"
+                right="0"
+                transform="translateX(40%)"
+                bg="white"
+                boxShadow="md"
+                borderRadius="md"
+                zIndex="1001"
+                px={6}
+                py={4}
+              >
+                <VStack align="start" spacing={4}>
+                  <HStack justify="space-between" w="100%">
+                    <ChakraLink
+                      as={RouterLink}
+                      to="/profile"
+                      fontWeight="bold"
+                      fontSize="md"
+                      onClick={() => setIsModalOpen(false)}
+                    >
+                      {user.username}
+                    </ChakraLink>
+                    <ChevronRightIcon boxSize={4} color="gray.500" />
+                  </HStack>
+                  <ChakraLink
+                    fontSize="xs"
+                    as={RouterLink}
+                    to="/profile/favorites"
+                    onClick={() => setIsModalOpen(false)}
                   >
-                    <VStack align="start" spacing={4}>
-                      <HStack justify="space-between" w="100%">
-                        <ChakraLink
-                          as={RouterLink}
-                          to="/profile"
-                          fontWeight="bold"
-                          fontSize="md"
-                          onClick={() => setIsModalOpen(false)}
-                        >
-                          {user.username}
-                        </ChakraLink>
-                        <ChevronRightIcon boxSize={4} color="gray.500" />
-                      </HStack>
-                      <ChakraLink
-                        fontSize="xs"
-                        as={RouterLink}
-                        to="/profile/favorites"
-                        onClick={() => setIsModalOpen(false)}
-                      >
-                        FAVORITES
-                      </ChakraLink>
-                      <ChakraLink
-                        fontSize="xs"
-                        as={RouterLink}
-                        to="/purchases"
-                        onClick={() => setIsModalOpen(false)}
-                      >
-                        ORDERS
-                      </ChakraLink>
-                      <Divider />
-                      <HStack justify="space-between" w="100%">
-                        <ChakraLink
-                          as={RouterLink}
-                          to="/for-sale"
-                          fontWeight="bold"
-                          fontSize="md"
-                          onClick={() => setIsModalOpen(false)}
-                        >
-                          SELLING
-                        </ChakraLink>
-                        <ChevronRightIcon boxSize={3.5} color="gray.500" />
-                      </HStack>
-                      <ChakraLink
-                        fontSize="xs"
-                        as={RouterLink}
-                        to="/for-sale"
-                        onClick={() => setIsModalOpen(false)}
-                      >
-                        FOR SALE
-                      </ChakraLink>
-                      <ChakraLink
-                        fontSize="xs"
-                        as={RouterLink}
-                        to="/sold"
-                        onClick={() => setIsModalOpen(false)}
-                      >
-                        SOLD
-                      </ChakraLink>
-                      <ChakraLink
-                        fontSize="xs"
-                        as={RouterLink}
-                        to="/drafts"
-                        onClick={() => setIsModalOpen(false)}
-                      >
-                        DRAFTS
-                      </ChakraLink>
-                      <Divider />
-                      <HStack justify="space-between" w="100%">
-                        <ChakraLink
-                          as={RouterLink}
-                          to="/profile-settings"
-                          fontWeight="bold"
-                          fontSize="sm"
-                          onClick={() => setIsModalOpen(false)}
-                        >
-                          SETTINGS
-                        </ChakraLink>
-                        <ChevronRightIcon boxSize={3.5} color="gray.500" />
-                      </HStack>
-                      <Text
-                        as={ChakraLink}
-                        fontSize="xs"
-                        color="gray.400"
-                        cursor="pointer"
-                        _hover={{ color: "black" }}
-                        onClick={handleLogout}
-                      >
-                        SIGN OUT
-                      </Text>
-                    </VStack>
-                  </Box>
-                )}
-              </>
-            ) : (
-              <>
-                <Button
-                  variant="ghost"
-                  onClick={() => onOpenAuthModal("register")}
-                >
-                  Sign Up
-                </Button>
-                <Button
-                  colorScheme="blackAlpha"
-                  onClick={() => onOpenAuthModal("login")}
-                >
-                  Log In
-                </Button>
-              </>
+                    FAVORITES
+                  </ChakraLink>
+                  <ChakraLink
+                    fontSize="xs"
+                    as={RouterLink}
+                    to="/purchases"
+                    onClick={() => setIsModalOpen(false)}
+                  >
+                    ORDERS
+                  </ChakraLink>
+                  <Divider />
+                  <HStack justify="space-between" w="100%">
+                    <ChakraLink
+                      as={RouterLink}
+                      to="/for-sale"
+                      fontWeight="bold"
+                      fontSize="md"
+                      onClick={() => setIsModalOpen(false)}
+                    >
+                      SELLING
+                    </ChakraLink>
+                    <ChevronRightIcon boxSize={3.5} color="gray.500" />
+                  </HStack>
+                  <ChakraLink
+                    fontSize="xs"
+                    as={RouterLink}
+                    to="/for-sale"
+                    onClick={() => setIsModalOpen(false)}
+                  >
+                    FOR SALE
+                  </ChakraLink>
+                  <ChakraLink
+                    fontSize="xs"
+                    as={RouterLink}
+                    to="/sold"
+                    onClick={() => setIsModalOpen(false)}
+                  >
+                    SOLD
+                  </ChakraLink>
+                  <ChakraLink
+                    fontSize="xs"
+                    as={RouterLink}
+                    to="/drafts"
+                    onClick={() => setIsModalOpen(false)}
+                  >
+                    DRAFTS
+                  </ChakraLink>
+                  <Divider />
+                  <HStack justify="space-between" w="100%">
+                    <ChakraLink
+                      as={RouterLink}
+                      to="/profile-settings"
+                      fontWeight="bold"
+                      fontSize="sm"
+                      onClick={() => setIsModalOpen(false)}
+                    >
+                      SETTINGS
+                    </ChakraLink>
+                    <ChevronRightIcon boxSize={3.5} color="gray.500" />
+                  </HStack>
+                  <Text
+                    as={ChakraLink}
+                    fontSize="xs"
+                    color="gray.400"
+                    cursor="pointer"
+                    _hover={{ color: "black" }}
+                    onClick={handleLogout}
+                  >
+                    SIGN OUT
+                  </Text>
+                </VStack>
+              </Box>
             )}
           </HStack>
         </Flex>
