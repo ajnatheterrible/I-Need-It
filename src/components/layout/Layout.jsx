@@ -1,26 +1,22 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
+import { Box } from "@chakra-ui/react";
+
 import useAuthStore from "../../store/authStore";
-import { useNavigate, useLocation } from "react-router-dom";
 import { AuthModalContext } from "../../context/AuthModalContext";
 
-import { Box } from "@chakra-ui/react";
 import Navbar from "./Navbar";
-import NavbarGuest from "./NavbarGuest";
 import AuthModal from "../modals/AuthModal";
 import ScrollToTop from "../shared/ScrollToTop";
 import OAuthErrorModal from "../modals/OAuthErrorModal";
 
 export default function Layout() {
   const location = useLocation();
-
   const fallbackRef = useRef(null);
 
   const [oauthError, setOAuthError] = useState(null);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authView, setAuthView] = useState("login");
-
-  const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
 
   const onOpenAuthModal = (view) => {
     setAuthView(view);
@@ -50,8 +46,7 @@ export default function Layout() {
     <AuthModalContext.Provider value={onOpenAuthModal}>
       <Box minHeight="100vh">
         <ScrollToTop />
-
-        {isLoggedIn ? <Navbar /> : <NavbarGuest />}
+        <Navbar />
 
         <Box
           ref={fallbackRef}
@@ -71,13 +66,10 @@ export default function Layout() {
           finalFocusRef={fallbackRef}
         />
 
-        <Box pt={!isLoggedIn ? "72px" : undefined}>
+        <Box pt="112px">
           <Outlet
             context={{
-              onOpenAuthModal: (view) => {
-                setAuthView(view);
-                setIsAuthOpen(true);
-              },
+              onOpenAuthModal,
             }}
           />
         </Box>

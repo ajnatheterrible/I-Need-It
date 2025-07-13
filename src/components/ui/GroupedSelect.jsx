@@ -10,7 +10,7 @@ import {
   Icon,
 } from "@chakra-ui/react";
 import { ChevronDownIcon } from "@chakra-ui/icons";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 const MotionMenuList = motion(MenuList);
 
@@ -55,44 +55,47 @@ export default function GroupedSelect({
             </HStack>
           </MenuButton>
 
-          {isOpen && (
-            <MotionMenuList
-              py={0}
-              zIndex={20}
-              bg="white"
-              border="1px solid #E2E8F0"
-              borderRadius="md"
-              boxShadow="md"
-              maxH="200px"
-              overflowY="auto"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.15 }}
-            >
-              {options.map((opt, index) =>
-                opt.isGroupLabel ? (
-                  <Box
-                    key={`group-${index}`}
-                    px={4}
-                    py={2}
-                    fontWeight="semibold"
-                  >
-                    {opt.label}
-                  </Box>
-                ) : (
-                  <MenuItem
-                    key={opt.value}
-                    onClick={() => onChange(opt.value)}
-                    _hover={{ bg: "gray.100" }}
-                    pl={6}
-                  >
-                    {opt.label}
-                  </MenuItem>
-                )
-              )}
-            </MotionMenuList>
-          )}
+          <AnimatePresence>
+            {isOpen && (
+              <MotionMenuList
+                key="menu"
+                py={0}
+                zIndex={20}
+                bg="white"
+                border="1px solid #E2E8F0"
+                borderRadius="md"
+                boxShadow="md"
+                maxH="200px"
+                overflowY="auto"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
+              >
+                {options.map((opt, index) =>
+                  opt.isGroupLabel ? (
+                    <Box
+                      key={`group-${index}`}
+                      px={4}
+                      py={2}
+                      fontWeight="semibold"
+                    >
+                      {opt.label}
+                    </Box>
+                  ) : (
+                    <MenuItem
+                      key={opt.value}
+                      onClick={() => onChange(opt.value)}
+                      _hover={{ bg: "gray.100" }}
+                      pl={6}
+                    >
+                      {opt.label}
+                    </MenuItem>
+                  )
+                )}
+              </MotionMenuList>
+            )}
+          </AnimatePresence>
         </Box>
       )}
     </Menu>

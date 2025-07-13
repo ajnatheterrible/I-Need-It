@@ -34,6 +34,7 @@ import MessageModal from "../components/modals/MessageModal";
 import ListingSkeleton from "../components/skeletons/ListingSkeleton";
 
 import useAuthStore from "../store/authStore";
+import { useAuthModal } from "../context/AuthModalContext";
 
 export default function ListingPage() {
   const { id } = useParams();
@@ -45,10 +46,15 @@ export default function ListingPage() {
   const favorites = useAuthStore((s) => s.fetchedData?.favorites);
   const setFetchedData = useAuthStore((s) => s.setFetchedData);
 
+  const onOpenAuthModal = useAuthModal();
+
   const [listing, setListing] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isImageOpen, setIsImageOpen] = useState(false);
+
+  const isViewerSeller =
+    isLoggedIn && user?.username === listing?.seller?.username;
 
   useEffect(() => {
     const fetchListing = async () => {
@@ -77,7 +83,7 @@ export default function ListingPage() {
   }, [favorites]);
 
   const handleFavorite = async (listingId) => {
-    if (!isLoggedIn) return;
+    if (!isLoggedIn) return onOpenAuthModal("register");
 
     const isFavorited = favoriteIds.includes(listingId);
 
@@ -154,6 +160,8 @@ export default function ListingPage() {
     if (!original || !sale || original <= sale) return 0;
     return Math.round(((original - sale) / original) * 100);
   };
+
+  const handleGuestAction = () => onOpenAuthModal("register");
 
   return (
     <>
@@ -251,7 +259,10 @@ export default function ListingPage() {
                           <FaRegHeart />
                         )
                       }
-                      onClick={() => handleFavorite(listing._id)}
+                      onClick={() => {
+                        if (!isLoggedIn) return onOpenAuthModal("register");
+                        handleFavorite(listing._id);
+                      }}
                     />
 
                     <Text fontSize="xs">{listing?.favoritesCount}</Text>
@@ -310,34 +321,46 @@ export default function ListingPage() {
                   <Text fontSize="sm">+ $9 Shipping — US to United States</Text>
                 </Box>
 
-                {listing?.seller?.username !== user.username && (
+                {!isViewerSeller && (
                   <KlarnaAffirmButton
                     onOpen={onKlarnaOpen}
                     price={listing.price}
                   />
                 )}
 
-                {listing?.seller?.username !== user.username ? (
+                {!isViewerSeller ? (
                   <VStack w="100%" spacing={2}>
                     <HStack w="100%">
                       <Button
                         colorScheme="blackAlpha"
                         flex="1"
-                        as={RouterLink}
-                        to="/checkout"
+                        onClick={() => {
+                          if (!isLoggedIn) return onOpenAuthModal("register");
+                          navigate("/checkout");
+                        }}
                       >
                         PURCHASE
                       </Button>
                     </HStack>
 
                     <HStack w="100%">
-                      <Button variant="outline" flex="1" onClick={onOfferOpen}>
+                      <Button
+                        variant="outline"
+                        flex="1"
+                        onClick={() => {
+                          if (!isLoggedIn) return onOpenAuthModal("register");
+                          onOfferOpen();
+                        }}
+                      >
                         OFFER
                       </Button>
                       <Button
                         variant="outline"
                         flex="1"
-                        onClick={onMessageOpen}
+                        onClick={() => {
+                          if (!isLoggedIn) return onOpenAuthModal("register");
+                          onMessageOpen();
+                        }}
                       >
                         MESSAGE
                       </Button>
@@ -375,13 +398,16 @@ export default function ListingPage() {
                       4 items for sale
                     </Text>
                   </Box>
-                  {listing?.seller?.username !== user.username && (
+                  {!isViewerSeller && (
                     <Button
                       fontWeight="bold"
                       size="sm"
                       fontSize="xs"
                       ml="auto"
                       variant="outline"
+                      onClick={() => {
+                        if (!isLoggedIn) return onOpenAuthModal("register");
+                      }}
                     >
                       FOLLOW
                     </Button>
@@ -469,7 +495,7 @@ export default function ListingPage() {
                     </Text>
                   </Box>
 
-                  {listing?.seller?.username !== user.username && (
+                  {!isViewerSeller && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -477,17 +503,18 @@ export default function ListingPage() {
                       fontSize="xs"
                       textTransform="uppercase"
                       leftIcon={<WarningIcon boxSize={3.5} />}
+                      onClick={() => {
+                        if (!isLoggedIn) return onOpenAuthModal("register");
+                      }}
                     >
                       Report Listing
                     </Button>
                   )}
                 </VStack>
 
-                {listing?.seller?.username !== user.username && <Divider />}
+                {!isViewerSeller && <Divider />}
 
-                {listing?.seller?.username !== user.username && (
-                  <PurchaseProtection />
-                )}
+                {!isViewerSeller && <PurchaseProtection />}
               </VStack>
             </GridItem>
           </Grid>

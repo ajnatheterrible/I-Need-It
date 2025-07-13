@@ -35,7 +35,7 @@ export default function SearchResults() {
   const [searchParams] = useSearchParams();
   const query = searchParams.get("query");
 
-  const userId = useAuthStore((s) => s.user._id);
+  const userId = useAuthStore((s) => s.user?._id);
   const token = useAuthStore((s) => s.token);
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
   const fetchedData = useAuthStore((s) => s.fetchedData);

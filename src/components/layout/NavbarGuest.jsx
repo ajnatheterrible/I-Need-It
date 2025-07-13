@@ -10,16 +10,22 @@ import {
   InputRightElement,
 } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
+
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import Container from "../shared/Container";
+
 import { useAuthModal } from "../../context/AuthModalContext";
 
-export default function NavbarGuest() {
-  const onOpenAuthModal = useAuthModal();
+import Container from "../shared/Container";
 
-  const navigate = useNavigate();
+export default function NavbarGuest() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchParams] = useSearchParams();
+
+  const onOpenAuthModal = useAuthModal();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const query = searchParams.get("query");
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -30,6 +36,11 @@ export default function NavbarGuest() {
       navigate(`/shop?query=${encodeURIComponent(searchTerm)}`);
     }
   };
+
+  useEffect(() => {
+    setActiveMenu(null);
+    setSearchTerm("");
+  }, [location.pathname, query]);
 
   return (
     <Box

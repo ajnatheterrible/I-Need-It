@@ -215,39 +215,14 @@ export default function Drafts() {
                               isSubmitting={isSubmitting}
                               page="drafts"
                             />
-
-                            {/* <Button
-                              w="full"
-                              size="sm"
-                              variant="outline"
-                              color="red.500"
-                              borderColor="red.500"
-                              fontWeight="extrabold"
-                              fontSize="xs"
-                              textTransform="uppercase"
-                              _hover={{ bg: "red.50" }}
-                              onClick={async () => {
-                                const result = await deleteDraft(
-                                  item._id,
-                                  token
-                                );
-                                if (result) {
-                                  setDrafts((prev) =>
-                                    prev.filter((d) => d._id !== item._id)
-                                  );
-                                }
-                              }}
-                            >
-                              Discard
-                            </Button> */}
                           </VStack>
                         </Box>
                       );
                     })}
                   </SimpleGrid>
                 ) : (
-                  <Text fontSize="xl" fontWeight="bold">
-                    You Have No Drafts
+                  <Text fontSize="md" fontWeight="heavy">
+                    You have no drafts
                   </Text>
                 )}
               </VStack>
