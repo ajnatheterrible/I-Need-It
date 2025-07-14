@@ -91,10 +91,6 @@ export default function Profile() {
     });
   }, [filtered, sortOption, forSale]);
 
-  console.log("hasFetchedForSaleRef.current:", hasFetchedForSaleRef.current);
-  console.log("forSale:", forSale);
-  console.log("sortedListings:", sortedListings);
-
   if (!hasFetchedForSaleRef.current) {
     return null;
   }
@@ -103,7 +99,11 @@ export default function Profile() {
     <>
       <Box position="sticky" top="70px" bg="white" zIndex={10} py={6}>
         <Flex justify="space-between" align="center">
-          <Text fontWeight="semibold">{sortedListings.length} listings</Text>
+          <Text fontWeight="semibold">
+            {sortedListings.length === 1
+              ? `${sortedListings.length} listing`
+              : `${sortedListings.length} listings`}
+          </Text>
           <Select
             size="sm"
             w="auto"
@@ -198,7 +198,7 @@ export default function Profile() {
                       {item.title}
                     </Text>
                     <Text fontSize="sm" fontWeight="bold" mt={4}>
-                      ${item.price.toLocaleString()}
+                      ${item.price?.toLocaleString()}
                     </Text>
                   </Box>
                 </Box>

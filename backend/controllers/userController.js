@@ -7,7 +7,6 @@ export const getUserFavorites = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id).populate("favorites");
   if (!user) throw createError("User not found", 404);
   res.status(200).json(user.favorites);
-  console.log("this is em getitng the damn favorites", user.favorites);
 });
 
 export const addFavorite = asyncHandler(async (req, res) => {
@@ -95,8 +94,13 @@ export const getForSale = asyncHandler(async (req, res) => {
   const user = req.user;
   if (!user) throw createError("User not found", 404);
 
-  const listings = await Listing.find({ seller: user._id });
-  if (!listings.length) throw createError("No listings from this seller", 404);
+  const listings = await Listing.find({
+    seller: user._id,
+    isDraft: false,
+    isSold: false,
+  });
+  if (!listings.length)
+    throw createError("No active listings from this seller", 404);
 
   res.status(200).json(listings);
 });
