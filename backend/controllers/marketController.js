@@ -65,10 +65,10 @@ export const uploadListing = asyncHandler(async (req, res) => {
 });
 
 export const patchListing = asyncHandler(async (req, res) => {
-  const { formData, draftId } = req.body;
+  const { formData, listingId } = req.body;
 
-  if (!draftId) {
-    throw createError(400, "Draft ID is required to update listing");
+  if (!listingId) {
+    throw createError(400, "Listing ID is required to update listing");
   }
 
   const cleanPrice = parseFloat(formData.priceInput?.replace(/[^0-9.]/g, ""));
@@ -92,15 +92,15 @@ export const patchListing = asyncHandler(async (req, res) => {
     countryOfOrigin: formData.countryOfOrigin || undefined,
   };
 
-  const updated = await Listing.findByIdAndUpdate(draftId, updatedFields, {
+  const updated = await Listing.findByIdAndUpdate(listingId, updatedFields, {
     new: true,
   });
 
   if (!updated) {
-    throw createError(404, "Draft not found or could not be updated");
+    throw createError(404, "Listing not found or could not be updated");
   }
 
-  res.status(200).json({ message: "Draft updated", listing: updated });
+  res.status(200).json({ message: "Listing updated", listing: updated });
 });
 
 export const deleteDraft = asyncHandler(async (req, res) => {

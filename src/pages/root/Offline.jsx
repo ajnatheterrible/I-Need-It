@@ -1,6 +1,5 @@
 import { Text, Flex } from "@chakra-ui/react";
 import Footer from "../../components/layout/Footer";
-
 import NavbarGuest from "../../components/layout/NavbarGuest";
 
 export default function OfflinePage() {

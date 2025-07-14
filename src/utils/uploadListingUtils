@@ -25,7 +25,7 @@ export const uploadListing = async (formData, token) => {
   }
 };
 
-export const patchListing = async (formData, token, draftId) => {
+export const patchListing = async (formData, token, listingId) => {
   try {
     const res = await fetch("/api/market/patch-listing", {
       method: "PATCH",
@@ -35,7 +35,7 @@ export const patchListing = async (formData, token, draftId) => {
       },
       body: JSON.stringify({
         formData,
-        ...(draftId && { draftId }),
+        listingId,
       }),
     });
 

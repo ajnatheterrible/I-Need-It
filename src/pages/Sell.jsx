@@ -47,41 +47,14 @@ import { handleImageUpload } from "../utils/imageUtils";
 import { uploadListing, patchListing } from "../utils/uploadListingUtils";
 
 export default function Sell() {
-  const token = useAuthStore((s) => s.token);
   const navigate = useNavigate();
-  const { draftId } = useParams();
+  const token = useAuthStore((s) => s.token);
+
+  const { draftId, editId } = useParams();
+  const listingId = draftId || editId;
+
   const inputRef = useRef(null);
   const didScrollOnValidation = useRef(false);
-
-  const [selectedRegions, setSelectedRegions] = useState([]);
-  const [shippingCosts, setShippingCosts] = useState({});
-
-  const toggleRegion = (region) => {
-    if (selectedRegions.includes(region)) {
-      setSelectedRegions((prev) => prev.filter((r) => r !== region));
-      setShippingCosts((prev) => {
-        const updated = { ...prev };
-        delete updated[region];
-        return updated;
-      });
-    } else {
-      setSelectedRegions((prev) => [...prev, region]);
-    }
-  };
-
-  const handleShippingCostChange = (region, value) => {
-    setShippingCosts((prev) => ({
-      ...prev,
-      [region]: value,
-    }));
-  };
-
-  const address = {
-    name: "Joey Pereira",
-    street: "2445 NW 158th St",
-    cityStateZip: "Opa Locka, FL 33054",
-    country: "United States",
-  };
 
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -94,6 +67,8 @@ export default function Sell() {
   const [acceptOffers, setAcceptOffers] = useState(true);
   const [selectedColor, setSelectedColor] = useState(null);
   const [selectedCondition, setSelectedCondition] = useState("");
+  const [selectedRegions, setSelectedRegions] = useState([]);
+  const [shippingCosts, setShippingCosts] = useState({});
   const [tags, setTags] = useState([]);
 
   const [showDesignerDropdown, setShowDesignerDropdown] = useState(false);
@@ -158,6 +133,33 @@ export default function Sell() {
     setPriceError(error);
   };
 
+  const toggleRegion = (region) => {
+    if (selectedRegions.includes(region)) {
+      setSelectedRegions((prev) => prev.filter((r) => r !== region));
+      setShippingCosts((prev) => {
+        const updated = { ...prev };
+        delete updated[region];
+        return updated;
+      });
+    } else {
+      setSelectedRegions((prev) => [...prev, region]);
+    }
+  };
+
+  const handleShippingCostChange = (region, value) => {
+    setShippingCosts((prev) => ({
+      ...prev,
+      [region]: value,
+    }));
+  };
+
+  const address = {
+    name: "Joey Pereira",
+    street: "2445 NW 158th St",
+    cityStateZip: "Opa Locka, FL 33054",
+    country: "United States",
+  };
+
   const handleSubmit = async () => {
     setHasSubmitted(true);
 
@@ -208,7 +210,10 @@ export default function Sell() {
     try {
       setIsSubmitting(true);
 
-      const listing = await uploadListing(formData, token);
+      let listing = listingId
+        ? await patchListing(formData, token, listingId)
+        : await uploadListing(formData, token);
+
       if (listing?._id) {
         navigate(`/listing/${listing._id}`);
         return;
@@ -252,7 +257,7 @@ export default function Sell() {
       setIsSubmitting(true);
 
       if (isDraftEdit) {
-        const listing = await patchListing(formData, token, draftId);
+        const listing = await patchListing(formData, token, listingId);
         if (listing?._id) {
           navigate("/drafts");
           return;
@@ -271,6 +276,28 @@ export default function Sell() {
     }
   };
 
+  const populateForm = (data) => {
+    setSelectedDepartment(data.department ?? undefined);
+    setSelectedCategory(data.category ?? undefined);
+    setSelectedSubcategory(data.subCategory ?? undefined);
+    setDesignerInput(data.designer ?? undefined);
+    setSelectedDesigner(data.designer ?? undefined);
+    setItemName(data.title ?? undefined);
+    setDescription(data.description ?? "");
+    setSelectedSize(data.size ?? undefined);
+    setCountryOfOrigin(data.countryOfOrigin ?? undefined);
+    setAcceptOffers(data.canOffer ?? true);
+    setSelectedColor(colors.find((c) => c.name === data.color) ?? undefined);
+    setSelectedCondition(data.condition ?? undefined);
+    setTags(data.tags ?? []);
+    setPriceInput(data.price !== undefined ? `$${data.price}` : "");
+    setUploadedImageUrls(
+      data.images?.length
+        ? [...data.images, null, null, null, null, null].slice(0, 5)
+        : [null, null, null, null, null]
+    );
+  };
+
   useEffect(() => {
     if (!draftId) return;
 
@@ -284,27 +311,7 @@ export default function Sell() {
         const data = await res.json();
 
         if (res.ok) {
-          setSelectedDepartment(data.department ?? undefined);
-          setSelectedCategory(data.category ?? undefined);
-          setSelectedSubcategory(data.subCategory ?? undefined);
-          setDesignerInput(data.designer ?? undefined);
-          setSelectedDesigner(data.designer ?? undefined);
-          setItemName(data.title ?? undefined);
-          setDescription(data.description ?? "");
-          setSelectedSize(data.size ?? undefined);
-          setCountryOfOrigin(data.countryOfOrigin ?? undefined);
-          setAcceptOffers(data.canOffer ?? true);
-          setSelectedColor(
-            colors.find((c) => c.name === data.color) ?? undefined
-          );
-          setSelectedCondition(data.condition ?? undefined);
-          setTags(data.tags ?? []);
-          setPriceInput(data.price !== undefined ? `$${data.price}` : "");
-          setUploadedImageUrls(
-            data.images?.length
-              ? [...data.images, null, null, null, null, null].slice(0, 5)
-              : [null, null, null, null, null]
-          );
+          populateForm(data);
         } else {
           console.error("Failed to load draft:", data?.error || data);
         }
@@ -317,6 +324,33 @@ export default function Sell() {
 
     fetchDraft();
   }, [draftId]);
+
+  useEffect(() => {
+    if (!editId) return;
+
+    const fetchListing = async () => {
+      try {
+        const res = await fetch(`/api/listings/${editId}`, {
+          method: "GET",
+          credentials: "include",
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          populateForm(data);
+        } else {
+          console.error("Failed to load listing:", data?.error || data);
+        }
+      } catch (err) {
+        console.error("Error fetching draft:", err);
+      }
+
+      setIsListingEdit(true);
+    };
+
+    fetchListing();
+  }, [editId]);
 
   const handleDeleteDraft = async () => {
     if (!draftId) return;
@@ -892,15 +926,29 @@ export default function Sell() {
                       isSubmitting={isSubmitting}
                     />
                   )}
-                  <HStack spacing={4}>
-                    <Button
-                      variant="outline"
-                      colorScheme="gray"
-                      onClick={handleSaveDraft}
-                      isDisabled={isSubmitting}
-                    >
-                      {draftId ? "Save Changes" : "Save as Draft"}
-                    </Button>
+                  {!editId && (
+                    <HStack spacing={4}>
+                      <Button
+                        variant="outline"
+                        colorScheme="gray"
+                        onClick={handleSaveDraft}
+                        isDisabled={isSubmitting}
+                      >
+                        {draftId ? "Save Changes" : "Save as Draft"}
+                      </Button>
+
+                      <Button
+                        bg="#DCEF31"
+                        color="black"
+                        _hover={{ bg: "#C5E426" }}
+                        onClick={handleSubmit}
+                        isDisabled={isSubmitting}
+                      >
+                        Publish
+                      </Button>
+                    </HStack>
+                  )}
+                  {editId && (
                     <Button
                       bg="#DCEF31"
                       color="black"
@@ -908,9 +956,9 @@ export default function Sell() {
                       onClick={handleSubmit}
                       isDisabled={isSubmitting}
                     >
-                      Publish
+                      Save Changes
                     </Button>
-                  </HStack>
+                  )}
                 </HStack>
               </Grid>
             </SimpleGrid>

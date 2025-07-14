@@ -62,6 +62,7 @@ export default function App() {
             <Route path="favorites" element={<Favorites />} />
             <Route path="sell" element={<Sell />} />
             <Route path="sell/draft/:draftId" element={<Sell />} />
+            <Route path="sell/edit/:editId" element={<Sell />} />
             <Route path="messages" element={<Messages />} />
             <Route path="profile" element={<UserLayout />}>
               <Route index element={<Profile />} />

@@ -373,7 +373,11 @@ export default function ListingPage() {
                     <Button w="100%" colorScheme="blackAlpha">
                       DROP PRICE
                     </Button>
-                    <Button w="100%" variant="outline">
+                    <Button
+                      w="100%"
+                      variant="outline"
+                      onClick={() => navigate(`/sell/edit/${listing._id}`)}
+                    >
                       EDIT
                     </Button>
                     <Button w="100%" variant="outline">
