@@ -72,7 +72,7 @@ export default function Favorites() {
         <Box py={10}>
           <VStack spacing={6} align="center" mb={6}>
             <Heading size="lg">Favorites</Heading>
-            <Text fontSize="sm" color="gray.600">
+            <Text fontSize="sm">
               You’ll be notified when your favorite listings drop in price or
               are relisted
             </Text>
@@ -98,7 +98,20 @@ export default function Favorites() {
             mt={16}
           >
             {!hasFetchedFavorites ? (
-              <FavoritesSkeleton />
+              [...Array(10)].map((_, i) => <FavoritesSkeleton key={i} />)
+            ) : sortedFavorites.length === 0 ? (
+              <Box
+                gridColumn="1 / -1"
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                minHeight="25vh"
+                width="100%"
+              >
+                <Text fontSize="sm" color="gray.500">
+                  You haven’t favorited anything yet
+                </Text>
+              </Box>
             ) : (
               sortedFavorites.map((item) => (
                 <Box
