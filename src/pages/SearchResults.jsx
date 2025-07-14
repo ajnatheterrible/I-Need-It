@@ -166,12 +166,7 @@ export default function SearchResults() {
             ) : (
               <Grid templateColumns="repeat(4, 1fr)" gap={6}>
                 {sortedListings.map((item) => (
-                  <Box
-                    key={item._id}
-                    borderWidth="1px"
-                    borderRadius="md"
-                    overflow="hidden"
-                  >
+                  <Box key={item._id} overflow="hidden">
                     <Box
                       as="a"
                       href={`/listing/${item._id}`}

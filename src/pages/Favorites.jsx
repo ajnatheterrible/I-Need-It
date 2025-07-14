@@ -114,12 +114,7 @@ export default function Favorites() {
               </Box>
             ) : (
               sortedFavorites.map((item) => (
-                <Box
-                  key={item._id}
-                  borderWidth="1px"
-                  borderRadius="md"
-                  overflow="hidden"
-                >
+                <Box key={item._id} overflow="hidden">
                   <Box position="relative" height="200px">
                     <Image
                       src={item.thumbnail}

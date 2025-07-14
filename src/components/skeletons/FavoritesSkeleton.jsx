@@ -18,13 +18,7 @@ export default function FavoritesSkeleton() {
   return (
     <>
       {cards.map((_, i) => (
-        <Box
-          key={i}
-          borderWidth="1px"
-          borderRadius="md"
-          overflow="hidden"
-          {...skeletonProps}
-        >
+        <Box key={i} overflow="hidden" {...skeletonProps}>
           <Skeleton height="200px" width="100%" />
 
           <Box p={3}>

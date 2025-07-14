@@ -27,7 +27,6 @@ export default function DraftsSkeleton() {
             <Skeleton
               w="120px"
               h="120px"
-              borderRadius="md"
               flexShrink={0}
               mt="2px"
               {...skeletonProps}

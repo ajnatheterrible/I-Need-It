@@ -22,13 +22,7 @@ export default function ListingGridSkeleton() {
     <Box flex="1">
       <Grid templateColumns="repeat(4, 1fr)" gap={6}>
         {cards.map((_, i) => (
-          <Box
-            key={i}
-            borderWidth="1px"
-            borderColor="gray.200"
-            borderRadius="md"
-            overflow="hidden"
-          >
+          <Box key={i} overflow="hidden">
             <Box position="relative" height="200px">
               <Skeleton height="100%" width="100%" />
             </Box>

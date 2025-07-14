@@ -15,7 +15,6 @@ import Footer from "../layout/Footer";
 const skeletonProps = {
   startColor: "gray.150",
   endColor: "gray.200",
-  borderRadius: "md",
 };
 
 export default function ListingSkeleton() {

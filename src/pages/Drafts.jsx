@@ -154,7 +154,6 @@ export default function Drafts() {
                               w="120px"
                               h="120px"
                               bg="gray.200"
-                              borderRadius="md"
                               flexShrink={0}
                               mt="2px"
                               backgroundImage={`url(${item.thumbnail || ""})`}

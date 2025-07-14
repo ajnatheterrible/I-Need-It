@@ -97,12 +97,7 @@ export default function UserFavorites() {
               <FavoritesSkeleton />
             ) : (
               sortedFavorites.map((item) => (
-                <Box
-                  key={item._id}
-                  borderWidth="1px"
-                  borderRadius="md"
-                  overflow="hidden"
-                >
+                <Box key={item._id} overflow="hidden">
                   <Box
                     as={RouterLink}
                     to={`/listing/${item._id}`}

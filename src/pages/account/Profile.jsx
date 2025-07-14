@@ -137,12 +137,7 @@ export default function Profile() {
           ) : (
             <Grid templateColumns="repeat(4, 1fr)" gap={6}>
               {sortedListings.map((item, i) => (
-                <Box
-                  key={item._id}
-                  borderWidth="1px"
-                  borderRadius="md"
-                  overflow="hidden"
-                >
+                <Box key={item._id} overflow="hidden">
                   <Box
                     as={RouterLink}
                     to={`/listing/${item._id}`}
