@@ -128,7 +128,7 @@ export default function Navbar() {
           </InputGroup>
 
           <Button
-            size="sm"
+            h="28px"
             fontSize="xs"
             variant="outline"
             borderRadius="0"
@@ -136,7 +136,7 @@ export default function Navbar() {
             textTransform="uppercase"
             minW="64px"
             px="0"
-            onClick={() => onOpenAuthModal("register")}
+            onClick={() => navigate("/sell")}
             _hover={{
               bg: "gray.100",
             }}

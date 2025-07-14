@@ -344,16 +344,18 @@ export default function ListingPage() {
                     </HStack>
 
                     <HStack w="100%">
-                      <Button
-                        variant="outline"
-                        flex="1"
-                        onClick={() => {
-                          if (!isLoggedIn) return onOpenAuthModal("register");
-                          onOfferOpen();
-                        }}
-                      >
-                        OFFER
-                      </Button>
+                      {listing.canOffer && (
+                        <Button
+                          variant="outline"
+                          flex="1"
+                          onClick={() => {
+                            if (!isLoggedIn) return onOpenAuthModal("register");
+                            onOfferOpen();
+                          }}
+                        >
+                          OFFER
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         flex="1"
@@ -531,8 +533,6 @@ export default function ListingPage() {
           price={listing.price}
         />
       )}
-
-      {isLoading && !listing && <ListingSkeleton />}
 
       {isImageOpen && (
         <Box
